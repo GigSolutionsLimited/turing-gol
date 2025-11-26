@@ -49,17 +49,23 @@ export class BrushService {
           // Check if this should be a detector pattern based on filename
           if (brushId.toLowerCase().includes('detector')) {
             // Convert to detector pattern
-            brushes[brushId] = BrushService.createDetectorPattern(
-              brushData.name || brushId,
-              brushData.pattern,
-              {
-                initialValue: brushId.includes('active') ? 1 : 0, // Default to inactive unless specified
-                falloffPeriod: DETECTOR_CONSTANTS.DEFAULT_FALLOFF_PERIOD
-              }
-            );
+            brushes[brushId] = {
+              ...BrushService.createDetectorPattern(
+                brushData.name || brushId,
+                brushData.pattern,
+                {
+                  initialValue: brushId.includes('active') ? 1 : 0, // Default to inactive unless specified
+                  falloffPeriod: DETECTOR_CONSTANTS.DEFAULT_FALLOFF_PERIOD
+                }
+              ),
+              id: brushId
+            };
           } else {
             // Regular brush pattern
-            brushes[brushId] = brushData;
+            brushes[brushId] = {
+              ...brushData,
+              id: brushId
+            };
           }
         }
       } catch (error) {
