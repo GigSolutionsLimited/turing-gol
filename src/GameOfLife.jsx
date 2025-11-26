@@ -1334,6 +1334,17 @@ const GameOfLife = React.forwardRef(({
                         console.log('🎯 CLICK - Removing placed object...');
                         setPlacedObjects(currentObjects => {
                             const removed = PlacedObjectService.removePlacedObject(currentObjects, obj.id);
+
+                            // Remove associated guidance lines when picking up the pattern
+                            if (onResetGuidanceLineObjects) {
+                                const remainingGuidanceLines = PlacedObjectService.extractGuidanceLines(removed);
+
+                                onResetGuidanceLineObjects();
+                                remainingGuidanceLines.forEach(guidanceLineObject => {
+                                    onAddGuidanceLineObject(guidanceLineObject);
+                                });
+                            }
+
                             console.log('🎯 CLICK - Placed objects updated:', {
                                 previousCount: currentObjects.length,
                                 newCount: removed.length,
