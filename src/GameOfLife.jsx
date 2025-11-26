@@ -1303,15 +1303,18 @@ const GameOfLife = React.forwardRef(({
                     });
 
                     // Convert placed object back to brush and select it
-                    if (brushes && brushes[obj.brushName] && onPatternSelectRef.current) {
+                    const brushId = obj.brushId || obj.brushName;
+                    const sourceBrush = brushes && brushId ? (brushes[brushId] || brushes[obj.brushName]) : null;
+                    if (sourceBrush && onPatternSelectRef.current) {
                         console.log('🎯 CLICK - Converting to brush:', {
                             brushName: obj.brushName,
-                            hasBrush: !!brushes[obj.brushName],
+                            brushId: brushId,
+                            hasBrush: !!sourceBrush,
                             hasOnPatternSelect: !!onPatternSelectRef.current,
                             rotation: obj.rotation || 0
                         });
 
-                        let brush = { ...brushes[obj.brushName] };
+                        let brush = { ...sourceBrush };
 
                         // Apply rotation if object was rotated
                         if (obj.rotation && obj.rotation !== 0) {
@@ -1360,8 +1363,9 @@ const GameOfLife = React.forwardRef(({
                     } else {
                         console.log('🎯 CLICK - Could not convert to brush:', {
                             hasBrushes: !!brushes,
-                            brushExists: brushes ? !!brushes[obj.brushName] : false,
+                            brushExists: brushes ? !!(brushes[obj.brushId || obj.brushName] || brushes[obj.brushName]) : false,
                             brushName: obj.brushName,
+                            brushId: brushId,
                             availableBrushes: brushes ? Object.keys(brushes) : [],
                             hasOnPatternSelect: !!onPatternSelectRef.current
                         });

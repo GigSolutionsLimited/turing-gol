@@ -55,7 +55,8 @@ export class PlacedObjectService {
     return {
       id,
       type: 'placedObject',
-      brushName: brush.name || 'unknown',
+      brushId: brush.id || brush.brushId || brush.name || 'unknown',
+      brushName: brush.name || brush.id || 'unknown',
       gridX,
       gridY,
       generation,
@@ -176,7 +177,7 @@ export class PlacedObjectService {
    */
   static checkPatternIntegrity(placedObject, grid, brushes) {
     // Get the original brush
-    const brush = brushes[placedObject.brushName];
+    const brush = brushes[placedObject.brushId] || brushes[placedObject.brushName];
     if (!brush) return false;
 
     // Apply rotation to get expected pattern
