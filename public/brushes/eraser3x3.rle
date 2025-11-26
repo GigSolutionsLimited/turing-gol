@@ -1,0 +1,7 @@
+#N Eraser 3x3
+#O User
+#C A 3x3 eraser pattern that clears cells in a 3x3 area
+#C This is a special eraser brush for clearing areas
+x = 3, y = 3, rule = B3/S23
+3o$3o$3o!
+

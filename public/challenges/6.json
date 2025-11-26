@@ -1,0 +1,40 @@
+{
+  "name": "6. P60 gun",
+  "description": "In this challenge, you'll work with Gosper Glider Guns, which emit gliders every 30 generations, to create a gun that emits gliders at a period of 60 generations. You may rotate the brushes. Try to make the gliders collide to cancel each other out. Good luck!",
+  "setup": [
+    {
+      "x": -50,
+      "y": -50,
+      "brush": "p30GliderGunG"
+    }
+  ],
+  "patterns": [
+    {
+      "x": -18,
+      "y": -32,
+      "rle": "2o$2o$7$8bobo$9b2o$9bo$12$23bobo$24b2o$24bo$12$38bobo$39b2o$39bo!"
+    }
+  ],
+  "detectors": [
+  ],
+  "width": 101,
+  "height": 101,
+  "targetTurn": 250,
+  "detectorFalloffPeriod": 29,
+  "editableSpace": {
+    "minX": -40,
+    "maxX": 0,
+    "minY": -40,
+    "maxY": 0
+  },
+  "brushes": ["p30GliderGunG", "eraser3x3", "eraser11x11"],
+  "solution": [
+    {
+      "x": -34,
+      "y": -2,
+      "brush": "p30GliderGun",
+      "rotate": -90
+    }
+  ]
+}
+

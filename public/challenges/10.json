@@ -1,0 +1,95 @@
+{
+  "name": "10. Not gate",
+  "description": "An important component in a computer is a NOT gate. This inverts a signal, so if a signal is present, the NOT gate will output no signal, but if no input signal is present, the NOT gate will output a signal. Can you construct one?",
+  "setup": [
+    {
+      "x": -30,
+      "y": -60,
+      "rotate": 0,
+      "brush": "p60GliderGunG"
+    },
+    {
+      "x": 27,
+      "y": -59,
+      "rotate": 90,
+      "brush": "p30GliderGunG"
+    }
+  ],
+  "patterns": [],
+  "detectors": [
+    {
+      "x": 4,
+      "y": -42,
+      "state": "inactive",
+      "index": 0,
+      "description": "Input detector - should be OFF when no input is present"
+    },
+    {
+      "x": 21,
+      "y": -5,
+      "state": "active",
+      "index": 1,
+      "description": "Output detector - should be ON when no input is present"
+    }
+  ],
+  "testScenarios": [
+    {
+      "name": "Input High (1) → Output Low (0)",
+      "description": "When the input gun is active, the NOT gate output should be disabled (detector shows 0)",
+      "setup": [
+        {
+          "x": -30,
+          "y": -60,
+          "brush": "p60GliderGunG"
+        }
+      ],
+      "detectors": [
+        {
+          "state": "active",
+          "index": 0,
+          "description": "Input detector - should remain ON when input is present"
+        },
+        {
+          "state": "inactive",
+          "index": 1,
+          "description": "Output detector - should remain OFF when input is present"
+        }
+      ]
+    },
+    {
+      "name": "Input Low (0) → Output High (1)",
+      "description": "When the input gun is inactive, the NOT gate output should be enabled (detector shows 1)",
+      "setup": [],
+      "detectors": [
+        {
+          "state": "inactive",
+          "index": 0,
+          "description": "Input detector - should be OFF when no input is present"
+        },
+        {
+          "state": "active",
+          "index": 1,
+          "description": "Output detector - should be ON when no input is present"
+        }
+      ]
+    }
+  ],
+  "width": 151,
+  "height": 151,
+  "targetTurn": 1000,
+  "detectorFalloffPeriod": 60,
+  "editableSpace": {
+    "minX": -75,
+    "maxX": 75,
+    "minY": -75,
+    "maxY": 75
+  },
+  "brushes": [
+    "p60GliderGunG",
+    "p30GliderGunG",
+    "eater1G",
+    "eraser3x3",
+    "eraser11x11"
+  ],
+  "solution": []
+}

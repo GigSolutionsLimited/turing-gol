@@ -1,0 +1,33 @@
+{
+  "name": "1. Basics",
+  "description": "We will start with the basics of Conway's Game of Life. Your goal is to match the blue patterns on the grid when time runs out. Use the brushes on the right to place and erase patterns on the grid, or click manually. You may only place brushes inside the highlighted area. Play around!",
+  "patterns": [
+    {
+      "x": -28,
+      "y": -1,
+      "rle": "2o$2o!"
+    },
+    {
+      "x": -1,
+      "y": -28,
+      "rle": "3o!"
+    },
+    {
+      "x": 17,
+      "y": 18,
+      "rle": "obo$b2o$bo!"
+    }
+  ],
+  "width": 61,
+  "height": 61,
+  "targetTurn": 189,
+  "editableSpace": {
+    "minX": -30,
+    "maxX": 0,
+    "minY": -30,
+    "maxY": 0
+  },
+  "brushes": ["block", "blinker", "glider", "eraser3x3", "eraser11x11"],
+  "solution": [
+  ]
+}

@@ -1,0 +1,7 @@
+#N Eraser 11x11
+#O User
+#C An 11x11 eraser pattern that clears cells in an 11x11 area
+#C This is a special eraser brush for clearing large areas
+x = 11, y = 11, rule = B3/S23
+11o$11o$11o$11o$11o$11o$11o$11o$11o$11o$11o!
+

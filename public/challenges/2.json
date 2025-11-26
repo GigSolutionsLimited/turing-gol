@@ -1,0 +1,28 @@
+{
+  "name": "2. Glider Gun",
+  "description": "In this challenge, you'll work with glider guns, which are patterns that periodically emit gliders. Your objective is to create a configuration that evolves into the target pattern within the specified number of turns. Use the provided glider gun brushes to place and erase cells on the grid. Good luck!",
+  "patterns": [
+    {
+      "x": -28,
+      "y": -26,
+      "rle": "34b2o$34b2o$2o$2o$14$35bo$36bo$34b3o$20$58bo$56bobo$57b2o!"
+    }
+  ],
+  "width": 61,
+  "height": 61,
+  "targetTurn": 165,
+  "editableSpace": {
+    "minX": -30,
+    "maxX": 30,
+    "minY": -30,
+    "maxY": 0
+  },
+  "brushes": ["p30GliderGun", "p60GliderGun", "eraser3x3", "eraser11x11"],
+  "solution": [
+    {
+      "x": -28,
+      "y": -28,
+      "brush": "p30GliderGun"
+    }
+  ]
+}

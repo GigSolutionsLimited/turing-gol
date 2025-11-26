@@ -1,0 +1,70 @@
+{
+  "name": "4. Detectors",
+  "description": "In this challenge, you'll work with eaters and detectors to manage glider streams. Your objective is to create a configuration that evolves into the target pattern within the grid. Note that the detector requires that no glider has crossed it in the last 43 generations! Good luck!",
+  "setup": [
+    {
+      "x": -100,
+      "y": -10,
+      "brush": "p46GliderGun"
+    },
+    {
+      "x": -67,
+      "y": -27,
+      "brush": "p46GliderGun"
+    },
+    {
+      "x": -34,
+      "y": -44,
+      "brush": "p46GliderGun"
+    },
+    {
+      "x": -1,
+      "y": -61,
+      "brush": "p46GliderGun"
+    }
+  ],
+  "patterns": [
+    {
+      "x": -50,
+      "y": -29,
+      "rle": "99bo$100b2o$99b2o$9$110bobo$111b2o$111bo$2$66bo$67b2o$66b2o$9$77bobo$78b2o$78bo$2$33bo$34b2o$33b2o$3$89bo$90b2o$89b2o$3$44bobo$45b2o$45bo$2$o$b2o97bobo$2o99b2o$101bo$2$56bo$57b2o$56b2o$3$11bobo98bo$12b2o99b2o$12bo99b2o$3$67bobo$68b2o$68bo$2$23bo$24b2o97bobo$23b2o99b2o$124bo$8$34bobo98bo$35b2o99b2o$35bo99b2o$8$46bo$47b2o$46b2o$9$57bobo$58b2o$58bo$8$69bo$70b2o$69b2o!"
+    }
+  ],
+  "detectors": [
+    {
+      "x": 30,
+      "y": 52,
+      "state": "inactive"
+    },
+    {
+      "x": 73,
+      "y": -5,
+      "direction": "inactive"
+    }
+  ],
+  "width": 201,
+  "height": 201,
+  "targetTurn": 400,
+  "detectorFalloffPeriod": 43,
+  "editableSpace": {
+    "minX": -100,
+    "maxX": 100,
+    "minY": -100,
+    "maxY": 100
+  },
+  "brushes": ["eater1", "eraser3x3", "eraser11x11"],
+  "solution": [
+    {
+      "x": 65,
+      "y": -13,
+      "brush": "eater1",
+      "rotate": -90
+    },
+    {
+      "x": 22,
+      "y": 44,
+      "brush": "eater1",
+      "rotate": -90
+    }
+  ]
+}

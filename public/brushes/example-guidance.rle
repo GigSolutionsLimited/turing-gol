@@ -1,0 +1,5 @@
+#N Example Guidance Pattern
+#P E/2/1/*/2
+x = 3, y = 2, rule = B3/S23
+obo$2bo!
+

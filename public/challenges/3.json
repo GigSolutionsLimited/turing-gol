@@ -1,0 +1,42 @@
+{
+  "name": "3. Wires",
+  "description": "In this challenge, you'll work with glider guns and snarks to route gliders to specific locations. Your objective is to create a configuration that evolves into the target pattern. Note that patterns can be rotated! Good luck!",
+  "setup": [
+    {
+      "x": -39,
+      "y": -40,
+      "brush": "p60GliderGun"
+    }
+  ],
+  "patterns": [
+    {
+      "x": -29,
+      "y": -10,
+      "rle": "38bo2b2o$36bobo2b2o$2o35b2o$obo$o$12$15b2o$15bobo$15bo!"
+    }
+  ],
+  "width": 101,
+  "height": 101,
+  "targetTurn": 400,
+  "editableSpace": {
+    "minX": -25,
+    "maxX": 25,
+    "minY": -25,
+    "maxY": 25
+  },
+  "brushes": ["snark", "eraser3x3", "eraser11x11"],
+  "solution": [
+    {
+      "x": 23,
+      "y": -19,
+      "brush": "snark",
+      "rotate": 90
+    },
+    {
+      "x": 5,
+      "y": 25,
+      "brush": "snark",
+      "rotate": 180
+    }
+  ]
+}

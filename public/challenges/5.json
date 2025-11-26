@@ -1,0 +1,28 @@
+{
+  "name": "5. Guidance",
+  "description": "You'll find the previous challenge to be a bit easier when we introduce guidance lines. These show where gliders will go.",
+  "setup": [
+    {
+      "x": -39,
+      "y": -40,
+      "brush": "p60GliderGunG"
+    }
+  ],
+  "patterns": [
+    {
+      "x": -29,
+      "y": -10,
+      "rle": "38bo2b2o$36bobo2b2o$2o35b2o$obo$o$12$15b2o$15bobo$15bo!"
+    }
+  ],
+  "width": 101,
+  "height": 101,
+  "targetTurn": 400,
+  "editableSpace": {
+    "minX": -25,
+    "maxX": 25,
+    "minY": -25,
+    "maxY": 25
+  },
+  "brushes": ["snarkG", "eraser3x3", "eraser11x11"]
+}

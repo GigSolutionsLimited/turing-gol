@@ -1,0 +1,7 @@
+#N Multi Guidance Test Pattern
+#P SE/35/21/*/4
+#P NW/5/5/10/2
+#P NE/40/10/*/3
+x = 5, y = 3, rule = B3/S23
+3o$b2o$2bo!
+

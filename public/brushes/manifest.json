@@ -1,0 +1,24 @@
+{
+  "brushes": [
+    "blinker.rle",
+    "block.rle",
+    "detector1x1.rle",
+    "eater1.rle",
+    "eater1G.rle",
+    "eraser11x11.rle",
+    "eraser3x3.rle",
+    "glider.rle",
+    "p30GliderGun.rle",
+    "p46GliderGun.rle",
+    "p46GliderGunG.rle",
+    "p60GliderGun.rle",
+    "snark.rle",
+    "snarkG.rle",
+    "test-guidance.rle",
+    "p30GliderGunG.rle",
+    "p60GliderGunG.rle",
+    "example-guidance.rle",
+    "multi-guidance-test.rle"
+  ]
+}
+

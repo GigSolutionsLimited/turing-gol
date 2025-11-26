@@ -1,0 +1,7 @@
+#N Single Detector
+#O Unknown
+#C A simple single-pixel detector pattern for testing
+#R B3/S23
+x = 1, y = 1
+o!
+

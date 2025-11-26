@@ -1,0 +1,57 @@
+{
+  "name": "7. Crossroad",
+  "width": 201,
+  "height": 131,
+  "brushes": [
+    "snarkG",
+    "eraser3x3",
+    "eraser11x11"
+  ],
+  "description": "In this challenge, you will need to use Snarks to cross two wires. A hint has been given on where to place the first one. You can guide your gliders to any path you need them in. Good luck!",
+  "detectorFalloffPeriod": 60,
+  "detectors": [
+    {
+      "x": -4,
+      "y": 15,
+      "state": "inactive"
+    }
+  ],
+  "editableSpace": {
+    "minX": -100,
+    "maxX": 100,
+    "minY": -65,
+    "maxY": 65
+  },
+  "patterns": [
+    {
+      "x": -49,
+      "y": -45,
+      "rle": "30bo$28bobo$29b2o$4$82bo$80bobo$81b2o$5$2bo42bo$obo40bobo$b2o41b2o$4$97bo$95bobo$96b2o$5$17bo42bo$15bobo40bobo$16b2o41b2o$4$112bo$110bobo$111b2o$5$75bo$73bobo$74b2o$4$127bo$125bobo$126b2o$5$90bo$88bobo$89b2o$4$142bo$140bobo$141b2o$5$105bo$103bobo$104b2o$12$120bo$118bobo$119b2o$12$135bo$133bobo$134b2o!"
+    }
+  ],
+  "setup": [
+    {
+      "x": -100,
+      "y": -65,
+      "brush": "p60GliderGunG"
+    },
+    {
+      "x": -57,
+      "y": -65,
+      "brush": "p60GliderGunG"
+    },
+    {
+      "x": 5,
+      "y": -63,
+      "brush": "snarkG"
+    },
+    {
+      "x": -9,
+      "y": 5,
+      "brush": "block"
+    }
+  ],
+  "solution": [
+  ],
+  "targetTurn": 900
+}

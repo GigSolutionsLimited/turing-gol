@@ -1,0 +1,51 @@
+{
+  "name": "9. Phases",
+  "description": "Rotating paths was tricky, because snarks can only rotate in 1 direction. Another way to rotate a glider is to use another gun. Use a second gun to change the path of the gliders.",
+  "setup": [
+    {
+      "x": -100,
+      "y": -50,
+      "brush": "p60GliderGunG"
+    },
+    {
+      "x": 24,
+      "y": -47,
+      "brush": "eater1G",
+      "rotate": 270
+    }
+  ],
+  "patterns": [
+      {
+        "x": -52,
+        "y": -24,
+        "rle": "63bo$54b2o8b2o$55b2o6b2o$54bo$2$2bo$obo$b2o$6$78bo$39b2o38b2o$40b2o36b2o$39bo$2$17bo$15bobo$16b2o$6$93bo$24b2o68b2o$25b2o66b2o$24bo$11$108bo$109b2o$108b2o$12$123bo$124b2o$123b2o!"
+      }
+  ],
+  "detectors": [
+  ],
+  "width": 201,
+  "height": 101,
+  "targetTurn": 588,
+  "detectorFalloffPeriod": 60,
+  "editableSpace": {
+    "minX": -100,
+    "maxX": 100,
+    "minY": -50,
+    "maxY": 50
+  },
+  "brushes": ["p60GliderGunG","p30GliderGunG","eater1G", "eraser3x3", "eraser11x11"],
+  "solution": [
+    {
+      "x": -42,
+      "y": 1,
+      "brush": "p30GliderGunG",
+      "rotate": 270
+    },
+    {
+      "x": 24,
+      "y": -45,
+      "brush": "p30GliderGunG",
+      "rotate": 270
+    }
+  ]
+}
