@@ -15,6 +15,7 @@ describe('Reset with Placed Objects Integration', () => {
       gridX: 10,
       gridY: 10,
       generation: 0,
+      intact: true, // Pattern is intact
       pixels: [
         { x: 10, y: 10 },
         { x: 11, y: 10 },
@@ -74,6 +75,7 @@ describe('Reset with Placed Objects Integration', () => {
     const placedObjects = [
       {
         id: 'obj1',
+        intact: true,
         pixels: [{ x: 5, y: 5 }, { x: 6, y: 5 }],
         guidanceLines: [
           { id: 'guide1', originX: 5, originY: 5 }
@@ -81,6 +83,7 @@ describe('Reset with Placed Objects Integration', () => {
       },
       {
         id: 'obj2',
+        intact: true,
         pixels: [{ x: 10, y: 10 }],
         guidanceLines: [
           { id: 'guide2', originX: 10, originY: 10 }

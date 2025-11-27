@@ -9,7 +9,7 @@ export const BASE_SPEED = 640;
 
 // Grid constraints
 export const MIN_GRID_SIZE = 10;
-export const MAX_GRID_SIZE = 500;
+export const MAX_GRID_SIZE = 501;
 export const DEFAULT_GRID_WIDTH = 50;
 export const DEFAULT_GRID_HEIGHT = 50;
 

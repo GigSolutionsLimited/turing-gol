@@ -143,6 +143,7 @@ describe('Placed Objects System', () => {
     const placedObjects = [
       {
         id: 'obj1',
+        intact: true, // Intact patterns show guidance lines
         guidanceLines: [
           { id: 'guide1', direction: 'E' },
           { id: 'guide2', direction: 'N' }
@@ -150,12 +151,14 @@ describe('Placed Objects System', () => {
       },
       {
         id: 'obj2',
+        intact: true, // Intact patterns show guidance lines
         guidanceLines: [
           { id: 'guide3', direction: 'S' }
         ]
       },
       {
         id: 'obj3',
+        intact: false, // Not intact, so guidance lines won't be extracted
         guidanceLines: [] // No guidance lines
       }
     ];

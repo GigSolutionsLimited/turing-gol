@@ -11,17 +11,44 @@ const DetectorPanel = ({ detectors }) => {
     return null;
   }
 
+  const detectorCount = indexedDetectors.length;
+  const useTwoRows = detectorCount > 4;
+
+  // Split detectors into two rows if needed
+  let firstRow = indexedDetectors;
+  let secondRow = [];
+
+  if (useTwoRows) {
+    const splitPoint = Math.ceil(detectorCount / 2);
+    firstRow = indexedDetectors.slice(0, splitPoint);
+    secondRow = indexedDetectors.slice(splitPoint);
+  }
+
   return (
-    <div className="detector-panel">
+    <div className={`detector-panel ${useTwoRows ? 'two-rows' : ''}`}>
       <div className="detector-display">
-        {indexedDetectors.map((detector) => (
-          <span
-            key={detector.index}
-            className="detector-digit"
-          >
-            {detector.currentValue}
-          </span>
-        ))}
+        <div className="detector-row">
+          {firstRow.map((detector) => (
+            <span
+              key={detector.index}
+              className="detector-digit"
+            >
+              {detector.currentValue}
+            </span>
+          ))}
+        </div>
+        {useTwoRows && (
+          <div className="detector-row">
+            {secondRow.map((detector) => (
+              <span
+                key={detector.index}
+                className="detector-digit"
+              >
+                {detector.currentValue}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

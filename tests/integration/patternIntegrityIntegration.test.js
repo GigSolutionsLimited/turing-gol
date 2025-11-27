@@ -135,7 +135,10 @@ describe('Pattern Integrity Integration', () => {
     // Only block's guidance line should be visible
     const visibleGuidanceLines = PlacedObjectService.getVisibleGuidanceLines(updatedObjects);
     expect(visibleGuidanceLines).toHaveLength(1);
-    expect(visibleGuidanceLines[0].id).toContain(blockObject.id);
+    // Check that the guidance line originates from the block position
+    expect(visibleGuidanceLines[0].originX).toBe(5);
+    expect(visibleGuidanceLines[0].originY).toBe(5);
+    expect(visibleGuidanceLines[0].direction).toBe('N');
   });
 
   test('should work with rotated patterns', () => {
