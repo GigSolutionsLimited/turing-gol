@@ -89,6 +89,7 @@ const GameOfLife = React.forwardRef(({
 
     // Track test scenario preview patterns (shown as gold pixels when not running)
     const [testScenarioPreviewPatterns, setTestScenarioPreviewPatterns] = useState([]);
+    const [testScenarioPreviewGuidanceLines, setTestScenarioPreviewGuidanceLines] = useState([]);
 
     const speed = BASE_SPEED / multiplier;
 
@@ -111,6 +112,7 @@ const GameOfLife = React.forwardRef(({
         }
 
         const previewPatterns = [];
+        const previewGuidanceLines = [];
         const centerOffsetX = Math.floor(gridSize.width / 2);
         const centerOffsetY = Math.floor(gridSize.height / 2);
 
@@ -128,6 +130,14 @@ const GameOfLife = React.forwardRef(({
                             }
                         }
 
+                        // Apply flips if specified
+                        if (setupItem.flip === 'x' || setupItem.flip === 'X') {
+                            brush = BrushService.transformPattern(brush, 'flipX');
+                        }
+                        if (setupItem.flip === 'y' || setupItem.flip === 'Y') {
+                            brush = BrushService.transformPattern(brush, 'flipY');
+                        }
+
                         // Generate preview pattern coordinates
                         for (const [dy, dx] of brush.pattern) {
                             const gridY = centerOffsetY + setupItem.y + dy;
@@ -142,12 +152,34 @@ const GameOfLife = React.forwardRef(({
                                 });
                             }
                         }
+
+                        // Extract guidance lines from the transformed brush
+                        const brushGuidanceLines = brush.guidanceLines || (brush.guidanceLine ? [brush.guidanceLine] : []);
+                        if (brushGuidanceLines.length > 0) {
+                            const placementX = centerOffsetX + setupItem.x;
+                            const placementY = centerOffsetY + setupItem.y;
+
+                            brushGuidanceLines.forEach((guidanceLine) => {
+                                // Apply guidance line offsets just like createGuidanceLineFromBrush does
+                                const originX = placementX + (guidanceLine.startX || 0);
+                                const originY = placementY + (guidanceLine.startY || 0);
+
+                                previewGuidanceLines.push({
+                                    originX,
+                                    originY,
+                                    direction: guidanceLine.direction,
+                                    speed: guidanceLine.speed || 1, // Default speed is 1
+                                    scenario: scenario.name,
+                                    brush: setupItem.brush
+                                });
+                            });
+                        }
                     }
                 }
             }
         }
 
-        return previewPatterns;
+        return { patterns: previewPatterns, guidanceLines: previewGuidanceLines };
     }, [challenge, brushes, gridSize]);
 
     // Helper function to reset to pre-play state (generation 0 with user's pixels)
@@ -198,6 +230,13 @@ const GameOfLife = React.forwardRef(({
                                 brush = BrushService.transformPattern(brush, 'rotateClockwise');
                             }
                         }
+                        // Apply flips if specified
+                        if (setupItem.flip === 'x' || setupItem.flip === 'X') {
+                            brush = BrushService.transformPattern(brush, 'flipX');
+                        }
+                        if (setupItem.flip === 'y' || setupItem.flip === 'Y') {
+                            brush = BrushService.transformPattern(brush, 'flipY');
+                        }
                         expectedLiveCells += brush.pattern.length;
                     }
                 }
@@ -222,6 +261,16 @@ const GameOfLife = React.forwardRef(({
                                     brush = BrushService.transformPattern(brush, 'rotateClockwise');
                                 }
                                 console.log(`🧪 Applied ${rotations} rotations to brush`);
+                            }
+
+                            // Apply flips if specified
+                            if (setupItem.flip === 'x' || setupItem.flip === 'X') {
+                                brush = BrushService.transformPattern(brush, 'flipX');
+                                console.log(`🧪 Applied flipX to brush`);
+                            }
+                            if (setupItem.flip === 'y' || setupItem.flip === 'Y') {
+                                brush = BrushService.transformPattern(brush, 'flipY');
+                                console.log(`🧪 Applied flipY to brush`);
                             }
 
                             // Place pattern on the grid
@@ -337,7 +386,7 @@ const GameOfLife = React.forwardRef(({
                             } else {
                                 console.log(`🧪 Using detectors from ${setupData.detectors ? 'setup data' : 'React state'}`);
                                 detectorsToUse.forEach((d, i) => {
-                                    console.log(`🧪 Detector ${i}: index=${d.index}, position=(${d.x}, ${d.y}), currentValue=${d.currentValue}`);
+                                    console.log(`🧪 Detector ${i}: index=${d.index}, position=(${d.position?.x}, ${d.position?.y}), currentValue=${d.currentValue}`);
                                 });
                             }
 
@@ -363,8 +412,11 @@ const GameOfLife = React.forwardRef(({
             setTimeout(async () => {
                 const {grid: currentGrid, detectors: currentDetectors} = await getCurrentGridAndDetectors();
 
-                // Run simulation at high speed - smaller batch size for better UX
-                const batchSize = 32; // Reduced from 128 for more frequent UI updates
+                // Run simulation at high speed - adjust batch size based on grid size
+                const gridSize = currentGrid.length * (currentGrid[0]?.length || 0);
+                const batchSize = gridSize > 50000 ? 64 : 32; // Larger batch for bigger grids (301x301 = 90601)
+                console.log(`🧪 Using batch size ${batchSize} for grid size ${currentGrid.length}x${currentGrid[0]?.length || 0}`);
+
                 let currentGeneration = 0;
                 let workingGrid = currentGrid;
                 let workingDetectors = currentDetectors;
@@ -373,7 +425,7 @@ const GameOfLife = React.forwardRef(({
                     // Validate current grid before processing
                     if (!workingGrid || !Array.isArray(workingGrid) || workingGrid.length === 0) {
                         console.error('🧪 Invalid grid state during test execution:', workingGrid);
-                        resolve();
+                        resolve(workingDetectors || []);
                         return;
                     }
 
@@ -385,7 +437,7 @@ const GameOfLife = React.forwardRef(({
                             currentGeneration++;
                         } catch (error) {
                             console.error(`🧪 Error during simulation at generation ${currentGeneration}:`, error);
-                            resolve();
+                            resolve(workingDetectors || []);
                             return;
                         }
                     }
@@ -397,7 +449,12 @@ const GameOfLife = React.forwardRef(({
 
                     if (currentGeneration >= targetGenerations) {
                         console.log(`🧪 Test simulation complete after ${currentGeneration} generations`);
-                        resolve();
+                        console.log(`🧪 Final detector states:`, workingDetectors.map(d => ({
+                            index: d.index,
+                            currentValue: d.currentValue,
+                            position: d.position
+                        })));
+                        resolve(workingDetectors);
                         return;
                     }
 
@@ -406,8 +463,8 @@ const GameOfLife = React.forwardRef(({
                         console.log(`🧪 Test progress: ${currentGeneration}/${targetGenerations} generations (${Math.round((currentGeneration / targetGenerations) * 100)}%)`);
                     }
 
-                    // Continue with next batch - minimal delay for UI updates
-                    setTimeout(processBatch, 10);
+                    // Continue with next batch - very minimal delay for faster execution
+                    setTimeout(processBatch, 1); // Reduced from 10ms to 1ms for faster tests
                 };
 
                 processBatch();
@@ -416,19 +473,27 @@ const GameOfLife = React.forwardRef(({
     }, [challenge]);
 
     // Helper function to validate test scenario
-    const validateTestScenario = useCallback((scenario) => {
+    const validateTestScenario = useCallback((scenario, currentDetectors = null) => {
         console.log(`🧪 Validating scenario: "${scenario.name}"`);
 
         if (!scenario.detectors || scenario.detectors.length === 0) {
             return {passed: true, message: 'No validation criteria specified'};
         }
 
+        // Use provided detectors or fall back to state
+        const detectorsToValidate = currentDetectors || detectors;
+        console.log(`🧪 Validating with ${detectorsToValidate.length} detectors:`, detectorsToValidate.map(d => ({
+            index: d.index,
+            currentValue: d.currentValue,
+            position: d.position
+        })));
+
         const results = {passed: true, details: {}, message: ''};
 
         // Validate detector states against scenario expected states
         scenario.detectors.forEach(scenarioDetector => {
             // Find the actual detector by index (detectors come from main challenge, not scenario)
-            const detector = detectors.find(d => d.index === scenarioDetector.index);
+            const detector = detectorsToValidate.find(d => d.index === scenarioDetector.index);
             if (detector) {
                 const actualState = detector.currentValue > 0 ? 'active' : 'inactive';
                 const expectedState = scenarioDetector.state;
@@ -446,7 +511,8 @@ const GameOfLife = React.forwardRef(({
                     results.passed = false;
                 }
             } else {
-                console.log(`🧪 Detector ${scenarioDetector.index}: not found in main challenge detectors (FAIL)`);
+                console.log(`🧪 Detector ${scenarioDetector.index}: not found in detectors array (FAIL)`);
+                console.log(`🧪 Available detector indices:`, detectorsToValidate.map(d => d.index));
                 results.details[`detector_${scenarioDetector.index}`] = {
                     expected: scenarioDetector.state,
                     actual: 'not_found',
@@ -541,10 +607,10 @@ const GameOfLife = React.forwardRef(({
                 const setupData = await applyTestScenarioSetup(scenario);
 
                 // Step 3: Run the test at 128x speed with setup data
-                await runTestAtHighSpeed(setupData);
+                const finalDetectors = await runTestAtHighSpeed(setupData);
 
-                // Step 4: Validate detector states
-                const testResult = validateTestScenario(scenario);
+                // Step 4: Validate detector states using the final detector state
+                const testResult = validateTestScenario(scenario, finalDetectors);
                 results.push({
                     name: scenario.name,
                     description: scenario.description,
@@ -874,7 +940,15 @@ const GameOfLife = React.forwardRef(({
                         }
                     }
 
-                    // Place rotated brush pattern at specified coordinates
+                    // Apply flips if specified
+                    if (setupItem.flip === 'x' || setupItem.flip === 'X') {
+                        brush = BrushService.transformPattern(brush, 'flipX');
+                    }
+                    if (setupItem.flip === 'y' || setupItem.flip === 'Y') {
+                        brush = BrushService.transformPattern(brush, 'flipY');
+                    }
+
+                    // Place transformed brush pattern at specified coordinates
                     for (const [dy, dx] of brush.pattern) {
                         const gridY = centerOffsetY + setupItem.y + dy;
                         const gridX = centerOffsetX + setupItem.x + dx;
@@ -928,7 +1002,15 @@ const GameOfLife = React.forwardRef(({
                     }
                 }
 
-                // Handle multiple guidance lines from the rotated brush
+                // Apply the same flips as used for pattern placement
+                if (setupItem.flip === 'x' || setupItem.flip === 'X') {
+                    brush = BrushService.transformPattern(brush, 'flipX');
+                }
+                if (setupItem.flip === 'y' || setupItem.flip === 'Y') {
+                    brush = BrushService.transformPattern(brush, 'flipY');
+                }
+
+                // Handle multiple guidance lines from the transformed brush
                 const guidanceLines = brush.guidanceLines || (brush.guidanceLine ? [brush.guidanceLine] : []);
 
                 console.log('🎯 SETUP EFFECT - Guidance lines for brush:', {
@@ -1299,7 +1381,12 @@ const GameOfLife = React.forwardRef(({
                         objectId: obj.id,
                         brushName: obj.brushName,
                         handlePosition: { x: minX, y: minY },
-                        clickPosition: { x: mouseX, y: mouseY }
+                        clickPosition: { x: mouseX, y: mouseY },
+                        objectRotation: obj.rotation,
+                        objectRotationType: typeof obj.rotation,
+                        objectFlipX: obj.flipX,
+                        objectFlipY: obj.flipY,
+                        fullObject: obj
                     });
 
                     // Convert placed object back to brush and select it
@@ -1311,19 +1398,67 @@ const GameOfLife = React.forwardRef(({
                             brushId: brushId,
                             hasBrush: !!sourceBrush,
                             hasOnPatternSelect: !!onPatternSelectRef.current,
-                            rotation: obj.rotation || 0
+                            rotation: obj.rotation || 0,
+                            flipX: obj.flipX || false,
+                            flipY: obj.flipY || false
                         });
 
+                        // Create brush by applying the rotation and flip transformations
+                        // This physically transforms the pattern to match what was placed
                         let brush = { ...sourceBrush };
 
-                        // Apply rotation if object was rotated
+                        console.log('🎯 CLICK - Source brush before rotation:', {
+                            brushName: brush.name,
+                            rotation: brush.rotation || 0,
+                            flipX: brush.flipX || false,
+                            flipY: brush.flipY || false,
+                            hasGuidanceLines: !!(brush.guidanceLines || brush.guidanceLine),
+                            guidanceLineDirections: brush.guidanceLines?.map(gl => gl.direction) || (brush.guidanceLine ? [brush.guidanceLine.direction] : [])
+                        });
+
+                        // Apply rotation first
                         if (obj.rotation && obj.rotation !== 0) {
                             const rotations = Math.floor(obj.rotation / 90) % 4;
                             for (let i = 0; i < rotations; i++) {
                                 brush = BrushService.transformPattern(brush, 'rotateClockwise');
+                                console.log(`🎯 CLICK - After rotation ${i + 1}/${rotations}:`, {
+                                    rotation: brush.rotation,
+                                    guidanceLineDirections: brush.guidanceLines?.map(gl => gl.direction) || (brush.guidanceLine ? [brush.guidanceLine.direction] : [])
+                                });
                             }
-                            console.log('🎯 CLICK - Applied rotation:', { rotations, finalBrush: brush.name });
+                            console.log('🎯 CLICK - Applied rotation:', {
+                                originalRotation: obj.rotation,
+                                rotations,
+                                finalBrushRotation: brush.rotation
+                            });
                         }
+
+                        // Then apply flips
+                        if (obj.flipX) {
+                            brush = BrushService.transformPattern(brush, 'flipX');
+                            console.log('🎯 CLICK - Applied flipX:', {
+                                flipX: brush.flipX,
+                                guidanceLineDirections: brush.guidanceLines?.map(gl => gl.direction) || (brush.guidanceLine ? [brush.guidanceLine.direction] : [])
+                            });
+                        }
+                        if (obj.flipY) {
+                            brush = BrushService.transformPattern(brush, 'flipY');
+                            console.log('🎯 CLICK - Applied flipY:', {
+                                flipY: brush.flipY,
+                                guidanceLineDirections: brush.guidanceLines?.map(gl => gl.direction) || (brush.guidanceLine ? [brush.guidanceLine.direction] : [])
+                            });
+                        }
+
+                        console.log('🎯 CLICK - Brush created with transformations:', {
+                            brushName: brush.name,
+                            rotation: brush.rotation || 0,
+                            flipX: brush.flipX || false,
+                            flipY: brush.flipY || false,
+                            hasGuidanceLines: !!(brush.guidanceLines || brush.guidanceLine),
+                            guidanceLinesCount: brush.guidanceLines?.length || (brush.guidanceLine ? 1 : 0),
+                            guidanceLineDirections: brush.guidanceLines?.map(gl => gl.direction) || (brush.guidanceLine ? [brush.guidanceLine.direction] : []),
+                            patternSize: brush.pattern?.length || 0
+                        });
 
                         // Select the brush
                         console.log('🎯 CLICK - Selecting brush...');
@@ -1331,26 +1466,49 @@ const GameOfLife = React.forwardRef(({
                         console.log('🎯 CLICK - Brush selected');
 
                         // Remove the placed object and its guidance lines
-                        console.log('🎯 CLICK - Removing placed object...');
-                        setPlacedObjects(currentObjects => {
-                            const removed = PlacedObjectService.removePlacedObject(currentObjects, obj.id);
+                        console.log('🎯 CLICK - Removing placed object...', {
+                            objectId: obj.id,
+                            objectGuidanceLines: obj.guidanceLines?.length || 0
+                        });
 
-                            // Remove associated guidance lines when picking up the pattern
-                            if (onResetGuidanceLineObjects) {
-                                const remainingGuidanceLines = PlacedObjectService.extractGuidanceLines(removed);
+                        // First, calculate what guidance lines should remain BEFORE updating state
+                        const remainingObjects = PlacedObjectService.removePlacedObject(placedObjects, obj.id);
+                        const remainingGuidanceLines = PlacedObjectService.extractGuidanceLines(remainingObjects);
 
+                        console.log('🎯 CLICK - Guidance line management:', {
+                            action: 'picking up object',
+                            objectId: obj.id,
+                            totalObjectsBefore: placedObjects.length,
+                            totalObjectsAfter: remainingObjects.length,
+                            remainingGuidanceLinesCount: remainingGuidanceLines.length,
+                            remainingGuidanceLines: remainingGuidanceLines.map(gl => ({
+                                id: gl.id,
+                                direction: gl.direction,
+                                originX: gl.originX,
+                                originY: gl.originY
+                            }))
+                        });
+
+                        // Update placed objects state
+                        setPlacedObjects(remainingObjects);
+
+                        // Then update guidance lines separately (outside render cycle)
+                        if (onResetGuidanceLineObjects && onAddGuidanceLineObject) {
+                            // Use setTimeout to ensure this happens after render
+                            setTimeout(() => {
+                                console.log('🎯 CLICK - Resetting guidance lines...');
                                 onResetGuidanceLineObjects();
                                 remainingGuidanceLines.forEach(guidanceLineObject => {
                                     onAddGuidanceLineObject(guidanceLineObject);
                                 });
-                            }
+                                console.log('🎯 CLICK - Guidance lines restored after pickup');
+                            }, 0);
+                        }
 
-                            console.log('🎯 CLICK - Placed objects updated:', {
-                                previousCount: currentObjects.length,
-                                newCount: removed.length,
-                                removedObjectId: obj.id
-                            });
-                            return removed;
+                        console.log('🎯 CLICK - Placed objects updated:', {
+                            previousCount: placedObjects.length,
+                            newCount: remainingObjects.length,
+                            removedObjectId: obj.id
                         });
 
                         // Remove object pixels from grid
@@ -1480,7 +1638,11 @@ const GameOfLife = React.forwardRef(({
                         gridPosition: { x: gridX, y: gridY },
                         generation,
                         hasPattern: !!selectedPattern.pattern,
-                        patternSize: selectedPattern.pattern?.length || 0
+                        patternSize: selectedPattern.pattern?.length || 0,
+                        rotation: selectedPattern.rotation || 0,
+                        hasRotation: !!selectedPattern.rotation,
+                        flipX: selectedPattern.flipX || false,
+                        flipY: selectedPattern.flipY || false
                     });
 
                     const placedObject = PlacedObjectService.createPlacedObject(
@@ -1488,7 +1650,9 @@ const GameOfLife = React.forwardRef(({
                         gridX,
                         gridY,
                         generation,
-                        0 // rotation - could be extended later
+                        selectedPattern.rotation || 0, // Use rotation from brush if present
+                        selectedPattern.flipX || false, // Use flipX from brush if present
+                        selectedPattern.flipY || false  // Use flipY from brush if present
                     );
 
                     console.log('🎯 PLACEMENT - Placed object created:', {
@@ -1496,6 +1660,9 @@ const GameOfLife = React.forwardRef(({
                         brushName: placedObject.brushName,
                         pixelCount: placedObject.pixels?.length || 0,
                         guidanceLineCount: placedObject.guidanceLines?.length || 0,
+                        rotation: placedObject.rotation,
+                        flipX: placedObject.flipX,
+                        flipY: placedObject.flipY,
                         pixels: placedObject.pixels?.slice(0, 3), // Show first 3 pixels
                         hasPixels: !!(placedObject.pixels && placedObject.pixels.length > 0)
                     });
@@ -1790,8 +1957,9 @@ const GameOfLife = React.forwardRef(({
 
         // Regenerate test scenario preview patterns if not running
         if (!running && brushesLoaded) {
-            const previewPatterns = generateTestScenarioPreviewPatterns();
-            setTestScenarioPreviewPatterns(previewPatterns);
+            const preview = generateTestScenarioPreviewPatterns();
+            setTestScenarioPreviewPatterns(preview.patterns);
+            setTestScenarioPreviewGuidanceLines(preview.guidanceLines);
         }
     }, [prePlayBoardState, setupBoardState, initialPlacedObjects, gridSize, challenge, brushes, onRunningChangeRef, onResetGuidanceLineObjects, onAddGuidanceLineObject, running, brushesLoaded, generateTestScenarioPreviewPatterns]);
 
@@ -1901,8 +2069,9 @@ const GameOfLife = React.forwardRef(({
 
         // Regenerate test scenario preview patterns if not running
         if (!running && brushesLoaded) {
-            const previewPatterns = generateTestScenarioPreviewPatterns();
-            setTestScenarioPreviewPatterns(previewPatterns);
+            const preview = generateTestScenarioPreviewPatterns();
+            setTestScenarioPreviewPatterns(preview.patterns);
+            setTestScenarioPreviewGuidanceLines(preview.guidanceLines);
         }
     }, [setupBoardState, gridSize, challenge, brushes, onRunningChangeRef, onResetGuidanceLineObjects, onAddGuidanceLineObject, running, brushesLoaded, generateTestScenarioPreviewPatterns]);
 
@@ -1910,11 +2079,13 @@ const GameOfLife = React.forwardRef(({
     // Update test scenario preview patterns when challenge or brushes change
     useEffect(() => {
         if (brushesLoaded && !running) {
-            const previewPatterns = generateTestScenarioPreviewPatterns();
-            setTestScenarioPreviewPatterns(previewPatterns);
+            const preview = generateTestScenarioPreviewPatterns();
+            setTestScenarioPreviewPatterns(preview.patterns);
+            setTestScenarioPreviewGuidanceLines(preview.guidanceLines);
         } else if (running) {
             // Clear preview patterns when game is running
             setTestScenarioPreviewPatterns([]);
+            setTestScenarioPreviewGuidanceLines([]);
         }
     }, [challenge, brushesLoaded, running, generateTestScenarioPreviewPatterns]);
 
@@ -2000,6 +2171,7 @@ const GameOfLife = React.forwardRef(({
                         guidanceLineObjects={guidanceLineObjects}
                         generation={generation}
                         testScenarioPreviewPatterns={testScenarioPreviewPatterns}
+                        testScenarioPreviewGuidanceLines={testScenarioPreviewGuidanceLines}
                         onCanvasClick={handleCanvasClick}
                         onMouseMove={handleCanvasMouseMoveThrottled}
                         onMouseLeave={handleCanvasMouseLeave}
@@ -2024,6 +2196,7 @@ const GameOfLife = React.forwardRef(({
                     guidanceLineObjects={guidanceLineObjects}
                     generation={generation}
                     testScenarioPreviewPatterns={testScenarioPreviewPatterns}
+                    testScenarioPreviewGuidanceLines={testScenarioPreviewGuidanceLines}
                     onCanvasClick={handleCanvasClick}
                     onMouseMove={handleCanvasMouseMoveThrottled}
                     onMouseLeave={handleCanvasMouseLeave}

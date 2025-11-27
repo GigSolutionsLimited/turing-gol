@@ -104,15 +104,56 @@ export class ChallengeService {
           try {
             const parsed = JSON.parse(localData);
 
-            // Smart cache invalidation: For challenges that should have testScenarios,
-            // check if localStorage data is missing them and force reload if so
-            const shouldHaveTestScenarios = exerciseNumber === '10'; // Level 10 should have test scenarios
-            if (shouldHaveTestScenarios && (!parsed.testScenarios || parsed.testScenarios.length === 0)) {
-              console.log('🔧 Cache invalidation: Reloading level 10 from file due to missing test scenarios');
-              localStorage.removeItem(storageKey);
-            } else {
+            // Smart cache invalidation: Check if localStorage data has a different structure
+            // than what we expect (e.g., missing testScenarios or changed setup)
+            // To detect this, we'll fetch the actual file and compare
+            const response = await fetch(`/challenges/${exerciseNumber}.json`);
+            if (response.ok) {
+              const jsonData = await response.json();
+
+              let needsInvalidation = false;
+              let reason = '';
+
+              // Check if the JSON file has test scenarios but cached data doesn't
+              if (jsonData.testScenarios && jsonData.testScenarios.length > 0 &&
+                  (!parsed.testScenarios || parsed.testScenarios.length === 0)) {
+                needsInvalidation = true;
+                reason = 'missing test scenarios';
+              }
+
+              // Check if setup array length has changed
+              const jsonSetupLength = jsonData.setup?.length || 0;
+              const cachedSetupLength = parsed.setup?.length || 0;
+              if (jsonSetupLength !== cachedSetupLength) {
+                needsInvalidation = true;
+                reason = `setup length changed (${cachedSetupLength} -> ${jsonSetupLength})`;
+              }
+
+              // Check if test scenarios length has changed
+              const jsonTestLength = jsonData.testScenarios?.length || 0;
+              const cachedTestLength = parsed.testScenarios?.length || 0;
+              if (jsonTestLength !== cachedTestLength) {
+                needsInvalidation = true;
+                reason = `test scenarios length changed (${cachedTestLength} -> ${jsonTestLength})`;
+              }
+
+              if (needsInvalidation) {
+                console.log(`🔧 Cache invalidation: Reloading level ${exerciseNumber} from file due to ${reason}`);
+                localStorage.setItem(storageKey, JSON.stringify(jsonData));
+                return this.processChallengeData(jsonData);
+              }
+
+              // If cached data seems valid, use it
+              console.log(`✅ Using cached data for ${exerciseNumber}:`, {
+                hasTestScenarios: !!(parsed.testScenarios && parsed.testScenarios.length > 0),
+                testScenariosLength: parsed.testScenarios?.length || 0,
+                setupLength: parsed.setup?.length || 0
+              });
               return this.processChallengeData(parsed);
             }
+
+            // If fetch failed, use cached data anyway
+            return this.processChallengeData(parsed);
           } catch (error) {
             console.warn(`Failed to parse localStorage data for exercise ${exerciseNumber}:`, error);
           }
@@ -123,6 +164,11 @@ export class ChallengeService {
       const response = await fetch(`/challenges/${exerciseNumber}.json`);
       if (response.ok) {
         const jsonData = await response.json();
+
+        console.log(`📥 Loaded fresh data for ${exerciseNumber} from JSON file:`, {
+          hasTestScenarios: !!(jsonData.testScenarios && jsonData.testScenarios.length > 0),
+          testScenariosLength: jsonData.testScenarios?.length || 0
+        });
 
         // Save original data to localStorage
         localStorage.setItem(storageKey, JSON.stringify(jsonData));
@@ -192,8 +238,30 @@ export class ChallengeService {
     try {
       const storageKey = `${STORAGE_KEYS.CHALLENGE_PREFIX}${exerciseNumber}`;
       localStorage.removeItem(storageKey);
+      console.log(`🗑️ Cleared cache for challenge ${exerciseNumber}`);
     } catch (error) {
       console.error(`Failed to clear challenge ${exerciseNumber} from localStorage:`, error);
+    }
+  }
+
+  /**
+   * Clear all challenge caches from localStorage
+   */
+  static clearAllChallengeCaches() {
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(STORAGE_KEYS.CHALLENGE_PREFIX)) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      console.log(`🗑️ Cleared ${keysToRemove.length} challenge caches`);
+      return keysToRemove.length;
+    } catch (error) {
+      console.error('Failed to clear all challenge caches:', error);
+      return 0;
     }
   }
 }

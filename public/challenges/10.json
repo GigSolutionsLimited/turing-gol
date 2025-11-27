@@ -1,13 +1,7 @@
 {
   "name": "10. Not gate",
-  "description": "An important component in a computer is a NOT gate. This inverts a signal, so if a signal is present, the NOT gate will output no signal, but if no input signal is present, the NOT gate will output a signal. Can you construct one?",
+  "description": "An important component in a computer is a NOT gate. The gold pixels represent the gun that will provide the input signal. Your goal is to make the numbers 01 and 10, depending on whether the yellow gun is on or off.",
   "setup": [
-    {
-      "x": -30,
-      "y": -60,
-      "rotate": 0,
-      "brush": "p60GliderGunG"
-    },
     {
       "x": 27,
       "y": -59,
@@ -15,7 +9,13 @@
       "brush": "p30GliderGunG"
     }
   ],
-  "patterns": [],
+  "patterns": [
+    {
+      "x": -34,
+      "y": -21,
+      "rle": "2o$2o$32$17b2o$17b2o!"
+    }
+  ],
   "detectors": [
     {
       "x": 4,
@@ -25,7 +25,7 @@
       "description": "Input detector - should be OFF when no input is present"
     },
     {
-      "x": 21,
+      "x": 20,
       "y": -5,
       "state": "active",
       "index": 1,
@@ -91,5 +91,17 @@
     "eraser3x3",
     "eraser11x11"
   ],
-  "solution": []
+  "solution": [
+    {
+      "x": -34,
+      "y": -25,
+      "brush": "p30GliderGunG"
+    },
+    {
+      "x": -20,
+      "y": 13,
+      "rotate": 270,
+      "brush": "p60GliderGunG"
+    }
+  ]
 }

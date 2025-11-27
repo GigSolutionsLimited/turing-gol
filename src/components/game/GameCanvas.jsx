@@ -4,6 +4,7 @@ import { createOptimizedRenderer } from '../../utils/canvasRenderer';
 import { gameCanvasEqual } from '../../utils/memoUtils';
 import { generateGuidanceLine } from '../../utils/rleUtils';
 import { generateAllGuidanceLinePixels } from '../../utils/guidanceLineObjects';
+import { BrushService } from '../../services/brushService';
 
 const GameCanvas = ({
   grid,
@@ -24,6 +25,7 @@ const GameCanvas = ({
   guidanceLineObjects, // Generation-based guidance line objects
   generation, // Current generation for visibility filtering
   testScenarioPreviewPatterns = [], // Test scenario preview patterns (shown as gold pixels)
+  testScenarioPreviewGuidanceLines = [], // Test scenario preview guidance lines (shown in gold)
   onCanvasClick,
   onMouseMove,
   onMouseLeave
@@ -87,26 +89,32 @@ const GameCanvas = ({
 
     let guidanceLinePixels = [];
 
+    // No need to transform selectedPattern - it's already transformed
+    // Either by keyboard shortcuts or when picked up from a placed object
+    let transformedPattern = selectedPattern;
+
     console.log('🎯 GameCanvas renderOptions calculation:', {
       hasSelectedPattern: !!selectedPattern,
-      pasting,
+      pasting: pasting,
       hasHoverCell: !!hoverCell,
-      running,
-      guidanceLinesVisible,
+      running: running,
+      guidanceLinesVisible: guidanceLinesVisible,
       hasGuidanceLineObjects: !!(guidanceLineObjects && guidanceLineObjects.length > 0),
       guidanceLineObjectsCount: guidanceLineObjects?.length || 0,
-      generation
+      generation,
+      selectedPatternRotation: selectedPattern?.rotation || 0
     });
 
     // Generate hover guidance lines if selectedPattern has guidanceLine data and user is hovering
-    if (selectedPattern && selectedPattern.pattern && pasting && hoverCell) {
+    if (transformedPattern && transformedPattern.pattern && pasting && hoverCell) {
       // Handle multiple guidance lines
-      const guidanceLines = selectedPattern.guidanceLines || (selectedPattern.guidanceLine ? [selectedPattern.guidanceLine] : []);
+      const guidanceLines = transformedPattern.guidanceLines || (transformedPattern.guidanceLine ? [transformedPattern.guidanceLine] : []);
 
       console.log('🎯 Processing hover guidance lines:', {
-        patternName: selectedPattern.name,
+        patternName: transformedPattern.name,
         guidanceLinesCount: guidanceLines.length,
-        hoverCell: { x: hoverCell.x, y: hoverCell.y }
+        hoverCell: { x: hoverCell.x, y: hoverCell.y },
+        hasRotation: !!(selectedPattern?.rotation)
       });
 
       if (guidanceLines.length > 0) {
@@ -117,7 +125,7 @@ const GameCanvas = ({
           // Generate guidance lines relative to hover position
           const relativeGuidancePixels = generateGuidanceLine(
             guidanceLine,
-            selectedPattern.pattern,
+            transformedPattern.pattern,
             gridWidth,
             gridHeight
           );
@@ -218,12 +226,13 @@ const GameCanvas = ({
       totalGuidanceLinePixels: guidanceLinePixels.length,
       hasDetectorRenderData: !!(detectorRenderData && detectorRenderData.length > 0),
       hasMoveHandleRenderData: !!(moveHandleRenderData && moveHandleRenderData.length > 0),
-      hasTestScenarioPreview: !!(testScenarioPreviewPatterns && testScenarioPreviewPatterns.length > 0)
+      hasTestScenarioPreview: !!(testScenarioPreviewPatterns && testScenarioPreviewPatterns.length > 0),
+      hasTestScenarioPreviewGuidanceLines: !!(testScenarioPreviewGuidanceLines && testScenarioPreviewGuidanceLines.length > 0)
     });
 
     return {
       challenge,
-      selectedPattern,
+      selectedPattern: transformedPattern, // Use transformed pattern for rendering
       hoverCell,
       pasting,
       isEditableCell,
@@ -232,9 +241,10 @@ const GameCanvas = ({
       detectorRenderData,
       moveHandleRenderData,
       guidanceLinePixels,
-      testScenarioPreviewPatterns
+      testScenarioPreviewPatterns,
+      testScenarioPreviewGuidanceLines
     };
-  }, [challenge, selectedPattern, hoverCell, pasting, isEditableCell, adminMode, cellSize, detectorRenderData, moveHandleRenderData, grid, guidanceLineObjects, generation, running, guidanceLinesVisible, testScenarioPreviewPatterns]);
+  }, [challenge, selectedPattern, hoverCell, pasting, isEditableCell, adminMode, cellSize, detectorRenderData, moveHandleRenderData, grid, guidanceLineObjects, generation, running, guidanceLinesVisible, testScenarioPreviewPatterns, testScenarioPreviewGuidanceLines]);
 
   // Fallback rendering method for error cases
   const fallbackRender = useCallback(() => {

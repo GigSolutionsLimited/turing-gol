@@ -1,0 +1,214 @@
+{
+  "name": "11. And gates",
+  "description": "In this level you will meet a new type of mover: the LWSS. It moves horizontally, not diagonally. You will combine three input streams by using and gates. Only if all 3 streams are on, should the AND gate output a stream.",
+  "setup": [
+  ],
+  "patterns": [
+  ],
+  "detectors": [
+    {
+      "x": 89,
+      "y": -16,
+      "state": "active",
+      "index": 0,
+      "description": "Input detector - should be ON when input is present"
+    },
+    {
+      "x": 12,
+      "y": -44,
+      "state": "active",
+      "index": 1,
+      "description": "Input detector - should be ON when input is present"
+    },
+    {
+      "x": -60,
+      "y": 12,
+      "state": "active",
+      "index": 2,
+      "description": "Input detector - should be ON when input is present"
+    },
+    {
+      "x": -118,
+      "y": -16,
+      "state": "active",
+      "index": 3,
+      "description": "Output detector - should be ON when all inputs present"
+    }
+  ],
+  "testScenarios": [
+    {
+      "name": "0000",
+      "description": "No inputs, so no output",
+      "setup": [
+      ],
+      "detectors": [
+        {
+          "state": "inactive",
+          "index": 0
+        },
+        {
+          "state": "inactive",
+          "index": 1
+        },
+        {
+          "state": "inactive",
+          "index": 2
+        },
+        {
+          "state": "inactive",
+          "index": 3
+        }
+      ]
+    },
+    {
+      "name": "1111",
+      "description": "All inputs together should produce output",
+      "setup": [
+        {
+          "x": 82,
+          "y": -27,
+          "brush": "p60lwssGunG",
+          "rotate": 180
+        },
+        {
+          "x": 1,
+          "y": -132,
+          "brush": "p60lwssGunG",
+          "rotate": 90
+        },
+        {
+          "x": -71,
+          "y": 36,
+          "brush": "p60lwssGunG",
+          "rotate": 270,
+          "flip": "y"
+        }
+      ],
+      "detectors": [
+        {
+          "state": "active",
+          "index": 0,
+          "description": "Input 1 detector - should be ON"
+        },
+        {
+          "state": "active",
+          "index": 1,
+          "description": "Input 2 detector - should be ON"
+        },
+        {
+          "state": "active",
+          "index": 2,
+          "description": "Input 3 detector - should be ON"
+        },
+        {
+          "state": "active",
+          "index": 3,
+          "description": "Output detector - should be ON when all inputs present"
+        }
+      ]
+    },
+    {
+      "name": "1000",
+      "description": "One input should not result in output",
+      "setup": [
+        {
+          "x": 82,
+          "y": -27,
+          "brush": "p60lwssGunG",
+          "rotate": 180
+        }
+      ],
+      "detectors": [
+        {
+          "state": "active",
+          "index": 0,
+          "description": "Input 1 detector - should be ON"
+        },
+        {
+          "state": "inactive",
+          "index": 1,
+          "description": "Input 2 detector - should be OFF"
+        },
+        {
+          "state": "inactive",
+          "index": 2,
+          "description": "Input 3 detector - should be OFF"
+        },
+        {
+          "state": "inactive",
+          "index": 3,
+          "description": "Output detector - should be OFF (not all inputs present)"
+        }
+      ]
+    },
+    {
+      "name": "1010",
+      "description": "Two inputs should not result in output",
+      "setup": [
+        {
+          "x": 82,
+          "y": -27,
+          "brush": "p60lwssGunG",
+          "rotate": 180
+        },
+        {
+          "x": -71,
+          "y": 36,
+          "brush": "p60lwssGunG",
+          "rotate": 270,
+          "flip": "y"
+        }
+      ],
+      "detectors": [
+        {
+          "state": "active",
+          "index": 0,
+          "description": "Input 1 detector - should be ON"
+        },
+        {
+          "state": "inactive",
+          "index": 1,
+          "description": "Input 2 detector - should be OFF"
+        },
+        {
+          "state": "active",
+          "index": 2,
+          "description": "Input 3 detector - should be ON"
+        },
+        {
+          "state": "inactive",
+          "index": 3,
+          "description": "Output detector - should be OFF (not all inputs present)"
+        }
+      ]
+    }
+  ],
+  "width": 301,
+  "height": 301,
+  "targetTurn": 500,
+  "detectorFalloffPeriod": 60,
+  "editableSpace": {
+    "minX": -150,
+    "maxX": 150,
+    "minY": -150,
+    "maxY": 150
+  },
+  "brushes": [
+    "andGateG",
+    "p60lwssGunG",
+    "eraser11x11"
+  ],
+  "solution": [
+    {
+      "x": -45,
+      "y": -85,
+      "brush": "andGateG"
+    },
+    {
+      "x": -118,
+      "y": -29,
+      "brush": "andGateG",
+      "flip": "x"
+    }
+  ]
+}

@@ -183,17 +183,22 @@ export class CanvasRenderer {
     // Draw grid lines first (as background)
     this.renderGrid(gridWidth, gridHeight, cellSize);
 
-    // 1. Render guidance lines (low priority - should be overwritten by live cells)
-    if (renderOptions.guidanceLinePixels) {
-      this.renderGuidanceLines(renderOptions.guidanceLinePixels, cellSize);
-    }
-
-    // 1.5. Render test scenario preview patterns as gold background pixels
+    // 1. Render test scenario preview patterns as gold background pixels
     if (renderOptions.testScenarioPreviewPatterns) {
       this.renderTestScenarioPreviewPatterns(renderOptions.testScenarioPreviewPatterns, cellSize);
     }
 
-    // 2. Render placed grid pixels (live cells)
+    // 1.5. Render test scenario preview guidance lines in gold (before normal guidance lines)
+    if (renderOptions.testScenarioPreviewGuidanceLines) {
+      this.renderTestScenarioPreviewGuidanceLines(renderOptions.testScenarioPreviewGuidanceLines, cellSize);
+    }
+
+    // 2. Render guidance lines (low priority - should be overwritten by live cells, but appears on top of gold lines)
+    if (renderOptions.guidanceLinePixels) {
+      this.renderGuidanceLines(renderOptions.guidanceLinePixels, cellSize);
+    }
+
+    // 3. Render placed grid pixels (live cells)
     this.renderLiveCells(grid, gridWidth, gridHeight, cellSize);
 
     // 3. Render challenge patterns (required patterns) - these overlay on top of live cells AND guidance lines
@@ -555,6 +560,207 @@ export class CanvasRenderer {
         this.ctx.fillRect(pixelX, pixelY, cellSize, cellSize);
       }
     });
+  }
+
+  /**
+   * Render test scenario preview guidance lines in gold
+   * @param {Array} testScenarioPreviewGuidanceLines - Array of preview guidance line objects
+   * @param {number} cellSize - Cell size in pixels
+   */
+  renderTestScenarioPreviewGuidanceLines(testScenarioPreviewGuidanceLines, cellSize = CELL_SIZE) {
+    if (!testScenarioPreviewGuidanceLines || testScenarioPreviewGuidanceLines.length === 0) {
+      return;
+    }
+
+    // Use gold color for test scenario guidance lines
+    const goldDark = '#DAA520';   // Darker gold
+    const goldLight = '#FFD700';  // Light gold
+
+    // If there's only one guidance line, render without intersection detection
+    if (testScenarioPreviewGuidanceLines.length === 1) {
+      this.renderSingleGoldGuidanceLine(testScenarioPreviewGuidanceLines[0], cellSize, goldDark, goldLight);
+      return;
+    }
+
+    // Multiple lines: apply intersection detection and truncation
+    // First, calculate the full path for each line
+    const linePaths = new Map();
+    testScenarioPreviewGuidanceLines.forEach((line, index) => {
+      const pixels = this.generateGoldGuidanceLinePathBasic(line, cellSize);
+      linePaths.set(index, pixels);
+    });
+
+    // For each line, check for intersections and truncate if needed
+    testScenarioPreviewGuidanceLines.forEach((line, lineIndex) => {
+      const fullPath = linePaths.get(lineIndex);
+      if (!fullPath) return;
+
+      let truncatedPath = [];
+
+      for (let i = 0; i < fullPath.length; i++) {
+        const [currentY, currentX] = fullPath[i];
+
+        // Check for intersections with other lines
+        let shouldStop = false;
+        if (i > 0) { // Don't stop at origin
+          for (let otherIndex = 0; otherIndex < testScenarioPreviewGuidanceLines.length; otherIndex++) {
+            if (lineIndex === otherIndex) continue;
+
+            const otherLine = testScenarioPreviewGuidanceLines[otherIndex];
+            const otherPath = linePaths.get(otherIndex);
+
+            // Count consecutive pixels that would intersect
+            let consecutiveHits = 0;
+            for (let j = 0; j < Math.min(2, fullPath.length - i); j++) {
+              if (i + j >= fullPath.length) break;
+              const [checkY, checkX] = fullPath[i + j];
+              const hasIntersection = otherPath.some(([otherY, otherX]) =>
+                otherY === checkY && otherX === checkX
+              );
+              if (hasIntersection) {
+                consecutiveHits++;
+              } else {
+                break;
+              }
+            }
+
+            // If we would hit 2+ consecutive pixels, check distance and stop if needed
+            if (consecutiveHits >= 2) {
+              const currentLineDistance = Math.sqrt(
+                Math.pow(currentX - line.originX, 2) + Math.pow(currentY - line.originY, 2)
+              );
+              const otherLineDistance = Math.sqrt(
+                Math.pow(currentX - otherLine.originX, 2) + Math.pow(currentY - otherLine.originY, 2)
+              );
+
+              // Stop the line that has its origin further from the intersection
+              if (currentLineDistance > otherLineDistance) {
+                shouldStop = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (shouldStop) {
+          break;
+        }
+
+        truncatedPath.push([currentY, currentX]);
+      }
+
+      // Render the truncated path with colors
+      truncatedPath.forEach((coords, index) => {
+        const [y, x] = coords;
+        const colorPhase = Math.floor(index / line.speed) % 2;
+        this.ctx.fillStyle = (colorPhase === 0) ? goldDark : goldLight;
+
+        const pixelX = x * cellSize;
+        const pixelY = y * cellSize;
+
+        if (cellSize < 3) {
+          this.ctx.fillRect(
+            Math.round(pixelX),
+            Math.round(pixelY),
+            Math.max(1, Math.round(cellSize)),
+            Math.max(1, Math.round(cellSize))
+          );
+        } else {
+          this.ctx.fillRect(pixelX, pixelY, cellSize, cellSize);
+        }
+      });
+    });
+  }
+
+  /**
+   * Render a single gold guidance line without intersection detection
+   * @param {Object} guidanceLine - Guidance line object
+   * @param {number} cellSize - Cell size in pixels
+   * @param {string} goldDark - Dark gold color
+   * @param {string} goldLight - Light gold color
+   */
+  renderSingleGoldGuidanceLine(guidanceLine, cellSize, goldDark, goldLight) {
+    const path = this.generateGoldGuidanceLinePathBasic(guidanceLine, cellSize);
+
+    path.forEach((coords, index) => {
+      const [y, x] = coords;
+      const colorPhase = Math.floor(index / guidanceLine.speed) % 2;
+      this.ctx.fillStyle = (colorPhase === 0) ? goldDark : goldLight;
+
+      const pixelX = x * cellSize;
+      const pixelY = y * cellSize;
+
+      if (cellSize < 3) {
+        this.ctx.fillRect(
+          Math.round(pixelX),
+          Math.round(pixelY),
+          Math.max(1, Math.round(cellSize)),
+          Math.max(1, Math.round(cellSize))
+        );
+      } else {
+        this.ctx.fillRect(pixelX, pixelY, cellSize, cellSize);
+      }
+    });
+  }
+
+  /**
+   * Generate basic path for a gold guidance line without intersection detection
+   * @param {Object} guidanceLine - Guidance line object
+   * @param {number} cellSize - Cell size in pixels
+   * @returns {Array} Array of [y, x] coordinates
+   */
+  generateGoldGuidanceLinePathBasic(guidanceLine, cellSize) {
+    const { originX, originY, direction } = guidanceLine;
+    const maxDistance = 1000;
+    const path = [];
+
+    for (let distance = 0; distance < maxDistance; distance++) {
+      let x = originX;
+      let y = originY;
+
+      // Calculate position based on direction
+      switch (direction) {
+        case 'N':
+          y = originY - distance;
+          break;
+        case 'S':
+          y = originY + distance;
+          break;
+        case 'E':
+          x = originX + distance;
+          break;
+        case 'W':
+          x = originX - distance;
+          break;
+        case 'NE':
+          x = originX + distance;
+          y = originY - distance;
+          break;
+        case 'NW':
+          x = originX - distance;
+          y = originY - distance;
+          break;
+        case 'SE':
+          x = originX + distance;
+          y = originY + distance;
+          break;
+        case 'SW':
+          x = originX - distance;
+          y = originY + distance;
+          break;
+        default:
+          continue;
+      }
+
+      // Stop if we're outside the visible canvas
+      if (x < 0 || y < 0 || x * cellSize > this.canvas.width || y * cellSize > this.canvas.height) {
+        break;
+      }
+
+      path.push([y, x]);
+    }
+
+    return path;
   }
 
   renderGrid(gridWidth, gridHeight, cellSize = CELL_SIZE) {

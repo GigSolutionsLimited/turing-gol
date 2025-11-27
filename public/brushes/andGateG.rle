@@ -1,0 +1,10 @@
+#N AND Gate
+#P W/78/69/*/10
+#P N/57/60/10/10
+x = 81, y = 84, rule = B3/S23
+43b2o$43b2o7$43bo$42b3o$41b5o$40bobobobo$40b2o3b2o3$43bo$42bobo$25b2o
+15bob2o$24bobo16b3o$9bobo11bo6b2o2b2o7bo2bo$9bo2bo10bo2bo2bo2bob2o8b3o
+$2o10b2o9bo6b2o11bo3bo$2o8bo3b2o8bobo15bo5bo$5b2o5b2o11b2o10bo5bo3bo$
+4bo4bo2bo8bo14bo7b3o$9bobo10b2o12b3o$21b2o3$30b2o$30bo$28bobobo$27b3ob
+2o$27bo$45b2o$45b2o4$36bo$37b2o$36b2o13$51bo$52b2o$51b2o13$66bo$67b2o$
+66b2o9$77b2o$77bobo$79bo$79b2o!

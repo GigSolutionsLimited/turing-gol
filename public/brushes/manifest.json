@@ -1,5 +1,6 @@
 {
   "brushes": [
+    "andGateG.rle",
     "blinker.rle",
     "block.rle",
     "detector1x1.rle",
@@ -18,7 +19,8 @@
     "p30GliderGunG.rle",
     "p60GliderGunG.rle",
     "example-guidance.rle",
-    "multi-guidance-test.rle"
+    "multi-guidance-test.rle",
+    "p60lwssGunG.rle"
   ]
 }
 

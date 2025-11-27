@@ -277,6 +277,38 @@ export class BrushService {
       pattern: transformedCoords
     };
 
+    // Track cumulative rotation for rotations
+    if (transformation === 'rotateClockwise') {
+      result.rotation = ((pattern.rotation || 0) + 90) % 360;
+      // Preserve flip state through rotations
+      if (pattern.flipX !== undefined) result.flipX = pattern.flipX;
+      if (pattern.flipY !== undefined) result.flipY = pattern.flipY;
+    } else if (transformation === 'rotateCounterclockwise') {
+      result.rotation = ((pattern.rotation || 0) - 90 + 360) % 360;
+      // Preserve flip state through rotations
+      if (pattern.flipX !== undefined) result.flipX = pattern.flipX;
+      if (pattern.flipY !== undefined) result.flipY = pattern.flipY;
+    } else if (transformation === 'flipX') {
+      // Track flip around X axis (vertical flip)
+      result.flipX = !pattern.flipX; // Toggle flipX state
+      // Preserve rotation and other flip
+      if (pattern.rotation !== undefined) result.rotation = pattern.rotation;
+      if (pattern.flipY !== undefined) result.flipY = pattern.flipY;
+    } else if (transformation === 'flipY') {
+      // Track flip around Y axis (horizontal flip)
+      result.flipY = !pattern.flipY; // Toggle flipY state
+      // Preserve rotation and other flip
+      if (pattern.rotation !== undefined) result.rotation = pattern.rotation;
+      if (pattern.flipX !== undefined) result.flipX = pattern.flipX;
+    } else {
+      // For other transformations, preserve existing rotation and flips if present
+      if (pattern.rotation !== undefined) {
+        result.rotation = pattern.rotation;
+      }
+      if (pattern.flipX !== undefined) result.flipX = pattern.flipX;
+      if (pattern.flipY !== undefined) result.flipY = pattern.flipY;
+    }
+
     // Maintain backward compatibility while supporting multiple guidance lines
     if (transformedGuidanceLine !== undefined) {
       result.guidanceLine = transformedGuidanceLine;

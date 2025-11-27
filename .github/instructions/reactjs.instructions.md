@@ -164,7 +164,7 @@ Instructions for building high-quality ReactJS applications with modern patterns
 - Provider pattern for context-based state sharing
 - Container/Presentational component separation
 - Custom hooks for reusable logic extraction---
-applyTo: '**'
-description: 'description'
+  applyTo: '**'
+  description: 'description'
 ---
 Provide project context and coding guidelines that AI should follow when generating code, answering questions, or reviewing changes.

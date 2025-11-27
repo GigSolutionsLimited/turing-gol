@@ -14,17 +14,36 @@ export class PlacedObjectService {
    * @param {number} gridY - Grid Y coordinate where placed
    * @param {number} generation - Generation when placed
    * @param {number} rotation - Rotation applied (0, 90, 180, 270)
+   * @param {boolean} flipX - Whether brush was flipped around X axis
+   * @param {boolean} flipY - Whether brush was flipped around Y axis
    * @returns {Object} Placed object with pixels and optional guidance lines
    */
-  static createPlacedObject(brush, gridX, gridY, generation = 0, rotation = 0) {
+  static createPlacedObject(brush, gridX, gridY, generation = 0, rotation = 0, flipX = false, flipY = false) {
     const id = `placed_${Date.now()}_${gridX}_${gridY}`;
 
-    // Apply rotation to brush if specified
+    // If the brush already has been transformed (has matching rotation and flip properties),
+    // use it as-is. Otherwise apply transformations.
     let transformedBrush = brush;
-    if (rotation && rotation !== 0) {
-      const rotations = Math.floor(rotation / 90) % 4;
-      for (let i = 0; i < rotations; i++) {
-        transformedBrush = this.rotateBrushClockwise(transformedBrush);
+    const brushAlreadyTransformed =
+      brush.rotation !== undefined && brush.rotation === rotation &&
+      (brush.flipX || false) === flipX &&
+      (brush.flipY || false) === flipY;
+
+    if (!brushAlreadyTransformed) {
+      // Apply rotation if needed
+      if (rotation && rotation !== 0 && brush.rotation !== rotation) {
+        const rotations = Math.floor(rotation / 90) % 4;
+        for (let i = 0; i < rotations; i++) {
+          transformedBrush = this.rotateBrushClockwise(transformedBrush);
+        }
+      }
+
+      // Apply flips if needed (only if brush doesn't already have them)
+      if (flipX && !brush.flipX) {
+        transformedBrush = BrushService.transformPattern(transformedBrush, 'flipX');
+      }
+      if (flipY && !brush.flipY) {
+        transformedBrush = BrushService.transformPattern(transformedBrush, 'flipY');
       }
     }
 
@@ -61,6 +80,8 @@ export class PlacedObjectService {
       gridY,
       generation,
       rotation,
+      flipX,
+      flipY,
       pixels,
       guidanceLines,
       intact: true, // New flag: true when pattern matches original brush
