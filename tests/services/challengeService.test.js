@@ -202,14 +202,21 @@ describe('ChallengeService', () => {
     });
 
     test('should use localStorage when available', async () => {
-      const mockStorageData = JSON.stringify({ name: 'Cached Challenge', patterns: [] });
+      const mockCachedData = { name: 'Cached Challenge', patterns: [], setup: [], testScenarios: [] };
+      const mockStorageData = JSON.stringify(mockCachedData);
       global.localStorage.getItem.mockReturnValue(mockStorageData);
+
+      // Mock fetch to return same data for cache validation
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockCachedData
+      });
 
       const result = await ChallengeService.loadChallenge('1. Basics');
 
       expect(global.localStorage.getItem).toHaveBeenCalledWith('challenge_1');
       expect(result).toBeDefined();
-      expect(result.pattern).toBeDefined();
+      expect(result.pattern).toBeDefined(); // processChallengeData returns 'pattern' (singular)
     });
 
     test('should force reload when requested', async () => {

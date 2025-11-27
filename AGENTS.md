@@ -8,7 +8,7 @@
 - **Interactive Challenges**: Guided exercises for learning Conway's Game of Life
 - **Pattern Laboratory**: Experiment with predefined brushes and patterns
 - **Admin Tools**: Content creation and management interface
-- **Performance**: Optimized for large grids (up to 500x500) with 60 FPS rendering
+- **Performance**: Optimized for large grids (up to 501x501) with 60 FPS rendering
 - **Auto-Zoom**: Intelligent viewport management for different grid sizes
 
 ---
@@ -746,6 +746,54 @@ This ensures zoom operations only update rendering dimensions without affecting 
   4. **Editor Overlays** - Hover effects, paste preview, editable area highlights
   5. **Detectors** (highest priority) - Interactive detector patterns, **always visible and never obscured**
 - **Visual Overlay**: Challenge patterns show green when there's a live cell at that position, blue otherwise
+
+---
+
+## 🟡 Test Scenario Preview with Gold Guidance Lines
+
+### Overview
+Test scenarios are visually previewed on the grid using gold-colored pixels and guidance lines, giving users immediate feedback about what will be tested when they run scenarios.
+
+### Visual Design
+- **Gold Pixels** (#FFD700): Show where test scenario gun patterns will appear
+- **Gold Guidance Lines**: Alternating dark gold (#DAA520) and light gold (#FFD700) showing firing directions
+- **Rendering Order**: Gold elements render below normal guidance lines, ensuring user-placed patterns are clearly visible
+
+### Technical Implementation
+
+#### Preview Pattern Generation
+- `generateTestScenarioPreviewPatterns()` extracts pixels and guidance lines from test scenario brushes
+- Applies rotations and flips specified in test scenario setup
+- Uses proper guidance line offsets (`startX`, `startY`) from brush specifications
+- Returns structured data: `{ patterns: [...], guidanceLines: [...] }`
+
+#### Guidance Line Truncation
+Gold guidance lines follow the same truncation rules as normal guidance lines:
+- **Intersection Detection**: Lines stop when they would intersect for 2+ consecutive pixels
+- **Distance Priority**: The line whose origin is further from the intersection point stops
+- **Performance Optimization**: Single gold line uses fast path without intersection calculations
+
+#### Rendering Priority Order
+1. Grid background
+2. **Gold preview patterns** (test scenario pixels)
+3. **Gold guidance lines** (test scenario directions)
+4. **Normal guidance lines** (user-placed patterns) ← Appears on top
+5. Live cells (player-placed pixels)
+6. Challenge patterns
+7. Editor overlays
+8. Detectors (always visible)
+
+### User Experience
+- **Level Load**: Gold preview appears automatically when test scenarios exist
+- **Visual Hierarchy**: Clear distinction between test preview (gold) and user patterns (blue)
+- **Pattern Matching**: Users can visually align their solutions with test requirements
+- **Guidance Visibility**: Normal blue guidance lines overlay gold ones, keeping user patterns prominent
+
+### Benefits
+- **Immediate Feedback**: Users see what tests will validate before running them
+- **Visual Learning**: Gold patterns show expected gun placements and firing directions
+- **Reduced Guesswork**: Clear visual indication of test scenario requirements
+- **Non-Intrusive**: Gold elements serve as background hints without obscuring user work
 
 ---
 

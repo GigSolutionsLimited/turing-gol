@@ -1,11 +1,11 @@
-import React, {useEffect, useState, useCallback, useRef} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {GameCanvas, GameStatus} from './components/game';
 import {useBrushes, useLevelCompletion} from './hooks/gameHooks';
 import {useAnimationLoop, useThrottle} from './hooks/performanceHooks';
-import {GameService, DetectorService, BrushService, PlacedObjectService} from './services';
+import {BrushService, DetectorService, GameService, PlacedObjectService} from './services';
 import {calculateCanvasSize, getCenterOffsets} from './utils';
 import {createGuidanceLineFromBrush} from './utils/guidanceLineObjects';
-import {CELL_SIZE, BASE_SPEED, DETECTOR_CONSTANTS} from './constants/gameConstants';
+import {BASE_SPEED, CELL_SIZE, DETECTOR_CONSTANTS} from './constants/gameConstants';
 
 const GameOfLife = React.forwardRef(({
                                          challenge,
@@ -179,14 +179,12 @@ const GameOfLife = React.forwardRef(({
             }
         }
 
-        return { patterns: previewPatterns, guidanceLines: previewGuidanceLines };
+        return {patterns: previewPatterns, guidanceLines: previewGuidanceLines};
     }, [challenge, brushes, gridSize]);
 
     // Helper function to reset to pre-play state (generation 0 with user's pixels)
     const resetToPrePlayState = useCallback(() => {
         return new Promise(resolve => {
-            console.log('🧪 Resetting to pre-play state...');
-
             // Restore placed objects to initial state
             setPlacedObjects(initialPlacedObjects);
 
@@ -204,21 +202,18 @@ const GameOfLife = React.forwardRef(({
             setLevelFailed(false);
             setPreviousGrid(null);
 
-            console.log('🧪 Reset to pre-play state complete');
             setTimeout(resolve, 100); // Small delay for state updates
         });
     }, [initialPlacedObjects, prePlayBoardState, setupBoardState, gridSize]);
     // Helper function to apply test scenario setup
     const applyTestScenarioSetup = useCallback((scenario) => {
         return new Promise(resolve => {
-            console.log(`🧪 Applying test scenario setup for "${scenario.name}"`);
 
             let setupDetectors = [];
             let expectedLiveCells = 0;
 
             // Calculate expected live cells first
             if (scenario.setup && scenario.setup.length > 0 && brushes && Object.keys(brushes).length > 0) {
-                console.log(`🧪 Processing ${scenario.setup.length} setup patterns with ${Object.keys(brushes).length} available brushes`);
 
                 for (const setupItem of scenario.setup) {
                     const baseBrush = brushes[setupItem.brush];
@@ -248,10 +243,8 @@ const GameOfLife = React.forwardRef(({
 
                     for (const setupItem of scenario.setup) {
                         const baseBrush = brushes[setupItem.brush];
-                        console.log(`🧪 Looking for brush "${setupItem.brush}":`, baseBrush ? 'FOUND' : 'NOT FOUND');
 
                         if (baseBrush && baseBrush.pattern) {
-                            console.log(`🧪 Brush "${setupItem.brush}" has ${baseBrush.pattern.length} pattern cells`);
 
                             // Apply rotation if specified
                             let brush = baseBrush;
@@ -260,58 +253,43 @@ const GameOfLife = React.forwardRef(({
                                 for (let j = 0; j < rotations; j++) {
                                     brush = BrushService.transformPattern(brush, 'rotateClockwise');
                                 }
-                                console.log(`🧪 Applied ${rotations} rotations to brush`);
                             }
 
                             // Apply flips if specified
                             if (setupItem.flip === 'x' || setupItem.flip === 'X') {
                                 brush = BrushService.transformPattern(brush, 'flipX');
-                                console.log(`🧪 Applied flipX to brush`);
                             }
                             if (setupItem.flip === 'y' || setupItem.flip === 'Y') {
                                 brush = BrushService.transformPattern(brush, 'flipY');
-                                console.log(`🧪 Applied flipY to brush`);
                             }
 
                             // Place pattern on the grid
-                            let placedCells = 0;
                             for (const [dy, dx] of brush.pattern) {
                                 const gridY = centerOffsetY + setupItem.y + dy;
                                 const gridX = centerOffsetX + setupItem.x + dx;
                                 if (gridY >= 0 && gridY < newGrid.length &&
                                     gridX >= 0 && gridX < newGrid[0].length) {
                                     newGrid[gridY][gridX] = 1;
-                                    placedCells++;
                                 }
                             }
-                            console.log(`🧪 Placed ${placedCells}/${brush.pattern.length} cells for brush "${setupItem.brush}" at offset (${centerOffsetX + setupItem.x}, ${centerOffsetY + setupItem.y})`);
                         } else {
                             console.error(`🧪 Brush "${setupItem.brush}" not found or has no pattern`);
                         }
                     }
 
-                    const totalLiveCells = newGrid.reduce((count, row) =>
-                        count + row.reduce((rowCount, cell) => rowCount + (cell ? 1 : 0), 0), 0
-                    );
-                    console.log(`🧪 Grid now has ${totalLiveCells} live cells after setup`);
-
                     return newGrid;
                 });
-            } else {
-                console.log('🧪 No setup patterns to apply or brushes not loaded');
             }
 
             // Setup test scenario detectors
             // Use main challenge detectors for positions, scenario detectors only specify expected states for validation
             if (challenge.detectors && challenge.detectors.length > 0) {
-                console.log('🧪 Using main challenge detectors for test scenario');
                 const testDetectors = DetectorService.initializeChallengeDetectors(
                     challenge.detectors.map(d => {
                         const centerX = Math.floor(gridSize.width / 2);
                         const centerY = Math.floor(gridSize.height / 2);
                         const gridX = centerX + d.x;
                         const gridY = centerY + d.y;
-                        console.log(`🧪 Setting up detector ${d.index} at grid position (${gridX}, ${gridY}) from main challenge`);
                         return {
                             ...d,
                             x: gridX,
@@ -323,13 +301,8 @@ const GameOfLife = React.forwardRef(({
 
                 setupDetectors = testDetectors;
                 setDetectors(testDetectors);
-                console.log('🧪 Test detectors initialized:', testDetectors.length);
-                console.log('🧪 Detector positions:', testDetectors.map(d => `Detector ${d.index}: position=(${d.position?.x}, ${d.position?.y})`));
-            } else {
-                console.log('🧪 No main challenge detectors found');
             }
 
-            console.log('🧪 Test scenario setup complete');
 
             // Wait for React state updates to complete by checking grid state
             const checkGridUpdate = () => {
@@ -343,11 +316,9 @@ const GameOfLife = React.forwardRef(({
 
                         // Check if we have the expected number of live cells (accounting for pre-play state)
                         if (expectedLiveCells === 0 || totalLiveCells >= expectedLiveCells) {
-                            console.log(`🧪 Grid state confirmed with ${totalLiveCells} live cells`);
                             // Use a small delay to ensure detector states are also updated
                             setTimeout(() => resolve({detectors: setupDetectors}), 100);
                         } else {
-                            console.log(`🧪 Waiting for grid update: expected >= ${expectedLiveCells}, current = ${totalLiveCells}`);
                             // Retry in next frame
                             setTimeout(checkGridUpdate, 50);
                         }
@@ -364,7 +335,6 @@ const GameOfLife = React.forwardRef(({
     // Helper function to run test at high speed
     const runTestAtHighSpeed = useCallback((setupData = {}) => {
         return new Promise(resolve => {
-            console.log(`🧪 Running test at 128x speed for ${challenge?.targetTurn || 1000} generations`);
 
             const targetGenerations = challenge?.targetTurn || 1000;
 
@@ -378,23 +348,11 @@ const GameOfLife = React.forwardRef(({
                                 ? [...setupData.detectors]
                                 : [...currentDetectors];
 
-                            console.log(`🧪 Starting simulation with grid size: ${currentGrid.length}x${currentGrid[0]?.length || 0}, detectors: ${detectorsToUse.length}`);
 
                             // Verify we have the expected setup
                             if (detectorsToUse.length === 0) {
                                 console.error('🧪 No detectors found - test scenario setup may not have completed properly');
-                            } else {
-                                console.log(`🧪 Using detectors from ${setupData.detectors ? 'setup data' : 'React state'}`);
-                                detectorsToUse.forEach((d, i) => {
-                                    console.log(`🧪 Detector ${i}: index=${d.index}, position=(${d.position?.x}, ${d.position?.y}), currentValue=${d.currentValue}`);
-                                });
                             }
-
-                            // Count non-empty cells to verify pattern was placed
-                            const liveCells = currentGrid.reduce((count, row) =>
-                                count + row.reduce((rowCount, cell) => rowCount + (cell ? 1 : 0), 0), 0
-                            );
-                            console.log(`🧪 Live cells at simulation start: ${liveCells}`);
 
                             gridResolve({
                                 grid: currentGrid.map(row => [...row]),
@@ -415,7 +373,6 @@ const GameOfLife = React.forwardRef(({
                 // Run simulation at high speed - adjust batch size based on grid size
                 const gridSize = currentGrid.length * (currentGrid[0]?.length || 0);
                 const batchSize = gridSize > 50000 ? 64 : 32; // Larger batch for bigger grids (301x301 = 90601)
-                console.log(`🧪 Using batch size ${batchSize} for grid size ${currentGrid.length}x${currentGrid[0]?.length || 0}`);
 
                 let currentGeneration = 0;
                 let workingGrid = currentGrid;
@@ -448,7 +405,6 @@ const GameOfLife = React.forwardRef(({
                     setGeneration(currentGeneration);
 
                     if (currentGeneration >= targetGenerations) {
-                        console.log(`🧪 Test simulation complete after ${currentGeneration} generations`);
                         console.log(`🧪 Final detector states:`, workingDetectors.map(d => ({
                             index: d.index,
                             currentValue: d.currentValue,
@@ -474,7 +430,6 @@ const GameOfLife = React.forwardRef(({
 
     // Helper function to validate test scenario
     const validateTestScenario = useCallback((scenario, currentDetectors = null) => {
-        console.log(`🧪 Validating scenario: "${scenario.name}"`);
 
         if (!scenario.detectors || scenario.detectors.length === 0) {
             return {passed: true, message: 'No validation criteria specified'};
@@ -505,14 +460,11 @@ const GameOfLife = React.forwardRef(({
                     passed
                 };
 
-                console.log(`🧪 Detector ${scenarioDetector.index}: expected ${expectedState}, got ${actualState} (${passed ? 'PASS' : 'FAIL'})`);
 
                 if (!passed) {
                     results.passed = false;
                 }
             } else {
-                console.log(`🧪 Detector ${scenarioDetector.index}: not found in detectors array (FAIL)`);
-                console.log(`🧪 Available detector indices:`, detectorsToValidate.map(d => d.index));
                 results.details[`detector_${scenarioDetector.index}`] = {
                     expected: scenarioDetector.state,
                     actual: 'not_found',
@@ -541,7 +493,6 @@ const GameOfLife = React.forwardRef(({
     // Helper function to clear test scenario setup
     const clearTestScenarioSetup = useCallback(() => {
         return new Promise(resolve => {
-            console.log('🧪 Clearing test scenario setup...');
 
             // Reset to pre-play state again
             resetToPrePlayState().then(() => {
@@ -566,7 +517,6 @@ const GameOfLife = React.forwardRef(({
                     setDetectors([]);
                 }
 
-                console.log('🧪 Test scenario setup cleared');
                 resolve();
             });
         });
@@ -575,10 +525,8 @@ const GameOfLife = React.forwardRef(({
 
     // Handle test scenarios
     const handleTest = useCallback(async () => {
-        console.log('🧪 TEST BUTTON PRESSED - handleTest called');
 
         if (!challenge || !challenge.testScenarios || challenge.testScenarios.length === 0) {
-            console.log('🧪 No test scenarios available for this challenge');
             return {
                 allPassed: false,
                 message: 'No test scenarios available for this challenge',
@@ -594,11 +542,9 @@ const GameOfLife = React.forwardRef(({
         try {
             const scenarios = challenge.testScenarios;
             const results = [];
-            console.log(`🧪 Running ${scenarios.length} test scenario(s)`);
 
             for (let i = 0; i < scenarios.length; i++) {
                 const scenario = scenarios[i];
-                console.log(`🧪 Running scenario ${i + 1}: ${scenario.name}`);
 
                 // Step 1: Reset the entire board but keep user's placements made on generation 0
                 await resetToPrePlayState();
@@ -619,11 +565,6 @@ const GameOfLife = React.forwardRef(({
                     details: testResult.details
                 });
 
-                console.log(`🧪 Scenario "${scenario.name}" result:`, testResult.passed ? 'PASSED ✅' : 'FAILED ❌');
-                if (!testResult.passed) {
-                    console.log(`🧪 Failure details: ${testResult.message}`);
-                }
-
                 // Step 5: Clear the test scenario setup (restore to pre-test state)
                 await clearTestScenarioSetup();
 
@@ -634,8 +575,6 @@ const GameOfLife = React.forwardRef(({
             const allPassed = results.every(result => result.passed);
             const passedCount = results.filter(result => result.passed).length;
 
-            console.log('🧪 All test scenarios completed');
-            console.log(`🧪 Results: ${passedCount}/${results.length} scenarios passed`);
 
             const testResults = {
                 allPassed,
@@ -697,7 +636,6 @@ const GameOfLife = React.forwardRef(({
 
             if (result.needsTestExecution) {
                 // Automatically run test scenarios when target turn is reached for challenges with test scenarios
-                console.log('🧪 Auto-running test scenarios for level completion check...');
                 handleTest().then(testResults => {
                     testResultsRef.current = testResults;
 
@@ -774,11 +712,6 @@ const GameOfLife = React.forwardRef(({
         // Always clear guidance lines FIRST when challenge changes
         // This ensures guidance lines from previous levels don't persist
         if (challengeChanged && onResetGuidanceLineObjects) {
-            console.log('🎯 CHALLENGE CHANGED - Resetting guidance line objects:', {
-                previousChallenge: previousChallengeName,
-                newChallenge: challenge?.name,
-                challengeChanged
-            });
             onResetGuidanceLineObjects();
             // Reset setup completion tracking for new challenge
             setupCompletedRef.current = null;
@@ -893,7 +826,6 @@ const GameOfLife = React.forwardRef(({
 
         // Always ensure we have a consistent state
         if (!challenge) {
-            console.log('🎯 SETUP EFFECT - No challenge, resetting guidance lines');
             if (onResetGuidanceLineObjects) {
                 onResetGuidanceLineObjects();
             }
@@ -902,13 +834,11 @@ const GameOfLife = React.forwardRef(({
         }
 
         if (!brushesLoaded) {
-            console.log('🎯 SETUP EFFECT - Brushes not loaded yet, skipping setup');
             return;
         }
 
         // If challenge has no setup, clear guidance lines and return
         if (!challenge.setup || challenge.setup.length === 0) {
-            console.log('🎯 SETUP EFFECT - Challenge has no setup patterns, resetting guidance lines');
             if (onResetGuidanceLineObjects && setupCompletedRef.current !== challengeKey) {
                 onResetGuidanceLineObjects();
                 setupCompletedRef.current = challengeKey;
@@ -918,7 +848,6 @@ const GameOfLife = React.forwardRef(({
 
         // Check if we've already completed setup for this exact challenge
         if (setupCompletedRef.current === challengeKey) {
-            console.log('🎯 SETUP EFFECT - Setup already completed for this challenge, skipping');
             return;
         }
 
@@ -982,15 +911,6 @@ const GameOfLife = React.forwardRef(({
 
         for (const setupItem of challenge.setup) {
             const baseBrush = brushes[setupItem.brush];
-            console.log('🎯 SETUP EFFECT - Processing setup item:', {
-                brushName: setupItem.brush,
-                hasBrush: !!baseBrush,
-                brushKeys: baseBrush ? Object.keys(baseBrush) : null,
-                hasGuidanceLines: !!(baseBrush?.guidanceLines),
-                hasGuidanceLine: !!(baseBrush?.guidanceLine),
-                guidanceLinesLength: baseBrush?.guidanceLines?.length,
-                setupItem
-            });
 
             if (baseBrush) {
                 // Apply the same rotation as used for pattern placement
@@ -1029,14 +949,6 @@ const GameOfLife = React.forwardRef(({
                     const placementX = centerOffsetX + setupItem.x;
                     const placementY = centerOffsetY + setupItem.y;
 
-                    console.log('🎯 SETUP EFFECT - Creating guidance line object:', {
-                        brushName: setupItem.brush,
-                        guidanceLine,
-                        placementX,
-                        placementY,
-                        centerOffsets: { centerOffsetX, centerOffsetY },
-                        setupPosition: { x: setupItem.x, y: setupItem.y }
-                    });
 
                     const guidanceLineObject = createGuidanceLineFromBrush(
                         guidanceLine,
@@ -1045,16 +957,6 @@ const GameOfLife = React.forwardRef(({
                         placementY
                     );
 
-                    console.log('🎯 SETUP EFFECT - Guidance line object created:', {
-                        success: !!guidanceLineObject,
-                        guidanceLineObject: guidanceLineObject ? {
-                            id: guidanceLineObject.id,
-                            direction: guidanceLineObject.direction,
-                            generation: guidanceLineObject.generation,
-                            originX: guidanceLineObject.originX,
-                            originY: guidanceLineObject.originY
-                        } : null
-                    });
 
                     if (guidanceLineObject) {
                         setupGuidanceLineObjects.push(guidanceLineObject);
@@ -1065,13 +967,6 @@ const GameOfLife = React.forwardRef(({
 
         // Always reset guidance line objects when loading setup (clear previous level's guidance lines)
         if (onResetGuidanceLineObjects) {
-            console.log('🎯 SETUP EFFECT - Resetting guidance line objects before adding setup patterns:', {
-                challengeName: challenge?.name,
-                hasSetup: !!(challenge?.setup && challenge.setup.length > 0),
-                setupLength: challenge?.setup?.length || 0,
-                brushesLoaded: brushesLoaded,
-                setupGuidanceLineObjectsCount: setupGuidanceLineObjects.length
-            });
             onResetGuidanceLineObjects(); // Clear any existing guidance line objects
 
             // Add setup guidance line objects if any exist
@@ -1088,16 +983,10 @@ const GameOfLife = React.forwardRef(({
                 setupGuidanceLineObjects.forEach(guidanceLineObject => {
                     onAddGuidanceLineObject(guidanceLineObject);
                 });
-            } else {
-                console.log('🎯 SETUP EFFECT - No guidance line objects to add:', {
-                    hasAddFunction: !!onAddGuidanceLineObject,
-                    guidanceLineObjectsCount: setupGuidanceLineObjects.length
-                });
             }
 
             // Mark setup as completed for this challenge
             setupCompletedRef.current = challengeKey;
-            console.log('🎯 SETUP EFFECT - Setup completed for challenge:', challengeKey);
         }
     }, [challenge, brushes, brushesLoaded, onAddGuidanceLineObject, onResetGuidanceLineObjects]); // Removed cellSize to prevent false triggers
     useEffect(() => {
@@ -1156,10 +1045,7 @@ const GameOfLife = React.forwardRef(({
             );
 
             if (integrityChanged) {
-                console.log('🎯 INTEGRITY CHECK - Integrity changed, updating placed objects');
                 setPlacedObjects(updatedObjects);
-            } else {
-                console.log('🎯 INTEGRITY CHECK - No integrity changes detected');
             }
         }
     }, [grid, placedObjects, brushes]);
@@ -1213,14 +1099,8 @@ const GameOfLife = React.forwardRef(({
                 [...currentGuidanceIds].some(id => !existingPlacedObjectGuidanceIds.has(id)) ||
                 [...existingPlacedObjectGuidanceIds].some(id => !currentGuidanceIds.has(id));
 
-            console.log('🎯 PLACED OBJECTS GUIDANCE SYNC - Checking if guidance lines changed:', {
-                currentGuidanceIds: Array.from(currentGuidanceIds),
-                existingPlacedObjectGuidanceIds: Array.from(existingPlacedObjectGuidanceIds),
-                guidanceLinesChanged
-            });
 
             if (guidanceLinesChanged) {
-                console.log('🎯 PLACED OBJECTS GUIDANCE SYNC - Updating guidance line objects due to placed object changes');
 
                 // Remove old placed object guidance lines and add new ones
                 // Setup guidance lines have IDs starting with 'guidance_' but are NOT from placed objects
@@ -1231,11 +1111,6 @@ const GameOfLife = React.forwardRef(({
                     return !gl.id.includes('placed_');
                 });
 
-                console.log('🎯 PLACED OBJECTS GUIDANCE SYNC - Preserving setup guidance lines:', {
-                    setupGuidanceLinesCount: setupGuidanceLines.length,
-                    setupGuidanceLineIds: setupGuidanceLines.map(gl => gl.id),
-                    allGuidanceLineIds: guidanceLineObjects.map(gl => gl.id)
-                });
 
                 // Reset guidance lines and restore setup ones + current intact ones
                 onResetGuidanceLineObjects();
@@ -1246,7 +1121,6 @@ const GameOfLife = React.forwardRef(({
                 // Add current intact guidance lines
                 currentGuidanceLines.forEach(gl => onAddGuidanceLineObject(gl));
 
-                console.log('🎯 PLACED OBJECTS GUIDANCE SYNC - Guidance line objects updated');
             }
         }
     }, [placedObjects, onAddGuidanceLineObject, onResetGuidanceLineObjects]); // Removed guidanceLineObjects dependency
@@ -1288,37 +1162,19 @@ const GameOfLife = React.forwardRef(({
 
     // Hide guidance lines when running, show when stopped
     useEffect(() => {
-        console.log('🎯 Guidance line visibility effect triggered:', {
-            running,
-            guidanceLinesVisible,
-            hasSetFunction: !!onSetGuidanceLinesVisible
-        });
 
         if (onSetGuidanceLinesVisible) {
             if (running && guidanceLinesVisible) {
-                console.log('🎯 Hiding guidance lines because game is running');
                 onSetGuidanceLinesVisible(false);
             } else if (!running && !guidanceLinesVisible) {
-                console.log('🎯 Showing guidance lines because game is stopped');
                 onSetGuidanceLinesVisible(true);
-            } else {
-                console.log('🎯 No guidance line visibility change needed:', {
-                    reason: running ? 'running and already hidden' : 'stopped and already visible'
-                });
             }
-        } else {
-            console.log('🎯 No guidance line visibility function available');
         }
     }, [running, guidanceLinesVisible, onSetGuidanceLinesVisible]);
 
 
     // Event handlers
     const handleCanvasClick = useCallback((e) => {
-        console.log('🎯 CLICK - Canvas click detected:', {
-            running,
-            placedObjectsCount: placedObjects.length,
-            hasPlacedObjects: placedObjects.length > 0
-        });
 
         if (running) return;
 
@@ -1329,28 +1185,12 @@ const GameOfLife = React.forwardRef(({
         const gridX = Math.floor(mouseX / cellSize);
         const gridY = Math.floor(mouseY / cellSize);
 
-        console.log('🎯 CLICK - Click position:', {
-            mouseX,
-            mouseY,
-            gridX,
-            gridY,
-            cellSize
-        });
 
         // Check for move handle clicks first (highest priority)
         if (!running && placedObjects.length > 0) {
-            console.log('🎯 CLICK - Checking for move handle clicks...');
             const handleSize = Math.max(6, Math.min(cellSize / 3, 12));
             const handleClickRadius = handleSize / 2;
 
-            console.log('🎯 CLICK - Handle detection parameters:', {
-                handleSize,
-                handleClickRadius,
-                placedObjectsToCheck: placedObjects.length,
-                cellSize
-            });
-
-            let foundAnyHandle = false;
             for (const obj of placedObjects) {
                 // Get the top-left corner of the placed object (where handle is positioned)
                 const minX = Math.min(...obj.pixels.map(p => p.x));
@@ -1362,114 +1202,40 @@ const GameOfLife = React.forwardRef(({
                 const distanceX = Math.abs(mouseX - handleX);
                 const distanceY = Math.abs(mouseY - handleY);
 
-                console.log('🎯 CLICK - Checking object:', {
-                    objectId: obj.id,
-                    brushName: obj.brushName,
-                    handlePosition: { x: minX, y: minY },
-                    handlePixelPosition: { x: handleX, y: handleY },
-                    mousePosition: { x: mouseX, y: mouseY },
-                    clickDistance: { x: distanceX, y: distanceY },
-                    handleClickRadius,
-                    isWithinX: distanceX <= handleClickRadius,
-                    isWithinY: distanceY <= handleClickRadius,
-                    bothWithin: distanceX <= handleClickRadius && distanceY <= handleClickRadius
-                });
 
                 if (distanceX <= handleClickRadius && distanceY <= handleClickRadius) {
-                    foundAnyHandle = true;
-                    console.log('🎯 CLICK - Move handle clicked for object:', {
-                        objectId: obj.id,
-                        brushName: obj.brushName,
-                        handlePosition: { x: minX, y: minY },
-                        clickPosition: { x: mouseX, y: mouseY },
-                        objectRotation: obj.rotation,
-                        objectRotationType: typeof obj.rotation,
-                        objectFlipX: obj.flipX,
-                        objectFlipY: obj.flipY,
-                        fullObject: obj
-                    });
 
                     // Convert placed object back to brush and select it
                     const brushId = obj.brushId || obj.brushName;
                     const sourceBrush = brushes && brushId ? (brushes[brushId] || brushes[obj.brushName]) : null;
                     if (sourceBrush && onPatternSelectRef.current) {
-                        console.log('🎯 CLICK - Converting to brush:', {
-                            brushName: obj.brushName,
-                            brushId: brushId,
-                            hasBrush: !!sourceBrush,
-                            hasOnPatternSelect: !!onPatternSelectRef.current,
-                            rotation: obj.rotation || 0,
-                            flipX: obj.flipX || false,
-                            flipY: obj.flipY || false
-                        });
 
                         // Create brush by applying the rotation and flip transformations
                         // This physically transforms the pattern to match what was placed
-                        let brush = { ...sourceBrush };
+                        let brush = {...sourceBrush};
 
-                        console.log('🎯 CLICK - Source brush before rotation:', {
-                            brushName: brush.name,
-                            rotation: brush.rotation || 0,
-                            flipX: brush.flipX || false,
-                            flipY: brush.flipY || false,
-                            hasGuidanceLines: !!(brush.guidanceLines || brush.guidanceLine),
-                            guidanceLineDirections: brush.guidanceLines?.map(gl => gl.direction) || (brush.guidanceLine ? [brush.guidanceLine.direction] : [])
-                        });
 
                         // Apply rotation first
                         if (obj.rotation && obj.rotation !== 0) {
                             const rotations = Math.floor(obj.rotation / 90) % 4;
                             for (let i = 0; i < rotations; i++) {
                                 brush = BrushService.transformPattern(brush, 'rotateClockwise');
-                                console.log(`🎯 CLICK - After rotation ${i + 1}/${rotations}:`, {
-                                    rotation: brush.rotation,
-                                    guidanceLineDirections: brush.guidanceLines?.map(gl => gl.direction) || (brush.guidanceLine ? [brush.guidanceLine.direction] : [])
-                                });
                             }
-                            console.log('🎯 CLICK - Applied rotation:', {
-                                originalRotation: obj.rotation,
-                                rotations,
-                                finalBrushRotation: brush.rotation
-                            });
                         }
 
                         // Then apply flips
                         if (obj.flipX) {
                             brush = BrushService.transformPattern(brush, 'flipX');
-                            console.log('🎯 CLICK - Applied flipX:', {
-                                flipX: brush.flipX,
-                                guidanceLineDirections: brush.guidanceLines?.map(gl => gl.direction) || (brush.guidanceLine ? [brush.guidanceLine.direction] : [])
-                            });
                         }
                         if (obj.flipY) {
                             brush = BrushService.transformPattern(brush, 'flipY');
-                            console.log('🎯 CLICK - Applied flipY:', {
-                                flipY: brush.flipY,
-                                guidanceLineDirections: brush.guidanceLines?.map(gl => gl.direction) || (brush.guidanceLine ? [brush.guidanceLine.direction] : [])
-                            });
                         }
 
-                        console.log('🎯 CLICK - Brush created with transformations:', {
-                            brushName: brush.name,
-                            rotation: brush.rotation || 0,
-                            flipX: brush.flipX || false,
-                            flipY: brush.flipY || false,
-                            hasGuidanceLines: !!(brush.guidanceLines || brush.guidanceLine),
-                            guidanceLinesCount: brush.guidanceLines?.length || (brush.guidanceLine ? 1 : 0),
-                            guidanceLineDirections: brush.guidanceLines?.map(gl => gl.direction) || (brush.guidanceLine ? [brush.guidanceLine.direction] : []),
-                            patternSize: brush.pattern?.length || 0
-                        });
 
                         // Select the brush
-                        console.log('🎯 CLICK - Selecting brush...');
                         onPatternSelectRef.current(brush);
-                        console.log('🎯 CLICK - Brush selected');
 
                         // Remove the placed object and its guidance lines
-                        console.log('🎯 CLICK - Removing placed object...', {
-                            objectId: obj.id,
-                            objectGuidanceLines: obj.guidanceLines?.length || 0
-                        });
 
                         // First, calculate what guidance lines should remain BEFORE updating state
                         const remainingObjects = PlacedObjectService.removePlacedObject(placedObjects, obj.id);
@@ -1496,61 +1262,30 @@ const GameOfLife = React.forwardRef(({
                         if (onResetGuidanceLineObjects && onAddGuidanceLineObject) {
                             // Use setTimeout to ensure this happens after render
                             setTimeout(() => {
-                                console.log('🎯 CLICK - Resetting guidance lines...');
                                 onResetGuidanceLineObjects();
                                 remainingGuidanceLines.forEach(guidanceLineObject => {
                                     onAddGuidanceLineObject(guidanceLineObject);
                                 });
-                                console.log('🎯 CLICK - Guidance lines restored after pickup');
                             }, 0);
                         }
 
-                        console.log('🎯 CLICK - Placed objects updated:', {
-                            previousCount: placedObjects.length,
-                            newCount: remainingObjects.length,
-                            removedObjectId: obj.id
-                        });
 
                         // Remove object pixels from grid
-                        console.log('🎯 CLICK - Removing pixels from grid...');
                         setGrid(g => {
                             const newGrid = g.map(arr => [...arr]);
-                            let removedPixels = 0;
                             obj.pixels.forEach(pixel => {
                                 if (pixel.y >= 0 && pixel.y < newGrid.length &&
                                     pixel.x >= 0 && pixel.x < newGrid[0].length) {
                                     newGrid[pixel.y][pixel.x] = 0;
-                                    removedPixels++;
                                 }
                             });
-                            console.log('🎯 CLICK - Pixels removed from grid:', removedPixels);
                             return newGrid;
                         });
 
-                        console.log('🎯 CLICK - Placed object converted back to brush and removed');
                         return; // Exit early, don't process as grid click
-                    } else {
-                        console.log('🎯 CLICK - Could not convert to brush:', {
-                            hasBrushes: !!brushes,
-                            brushExists: brushes ? !!(brushes[obj.brushId || obj.brushName] || brushes[obj.brushName]) : false,
-                            brushName: obj.brushName,
-                            brushId: brushId,
-                            availableBrushes: brushes ? Object.keys(brushes) : [],
-                            hasOnPatternSelect: !!onPatternSelectRef.current
-                        });
                     }
                 }
             }
-
-            if (!foundAnyHandle) {
-                console.log('🎯 CLICK - No move handle clicked, continuing with normal click processing');
-            }
-        } else {
-            console.log('🎯 CLICK - Skipping move handle check:', {
-                reason: running ? 'game is running' : 'no placed objects',
-                running,
-                placedObjectsCount: placedObjects.length
-            });
         }
 
         // Check bounds
@@ -1633,17 +1368,6 @@ const GameOfLife = React.forwardRef(({
                     });
                 } else {
                     // Handle pattern placement: create placed object with linked guidance lines
-                    console.log('🎯 PLACEMENT - Creating placed object:', {
-                        patternName: selectedPattern.name,
-                        gridPosition: { x: gridX, y: gridY },
-                        generation,
-                        hasPattern: !!selectedPattern.pattern,
-                        patternSize: selectedPattern.pattern?.length || 0,
-                        rotation: selectedPattern.rotation || 0,
-                        hasRotation: !!selectedPattern.rotation,
-                        flipX: selectedPattern.flipX || false,
-                        flipY: selectedPattern.flipY || false
-                    });
 
                     const placedObject = PlacedObjectService.createPlacedObject(
                         selectedPattern,
@@ -1655,27 +1379,10 @@ const GameOfLife = React.forwardRef(({
                         selectedPattern.flipY || false  // Use flipY from brush if present
                     );
 
-                    console.log('🎯 PLACEMENT - Placed object created:', {
-                        id: placedObject.id,
-                        brushName: placedObject.brushName,
-                        pixelCount: placedObject.pixels?.length || 0,
-                        guidanceLineCount: placedObject.guidanceLines?.length || 0,
-                        rotation: placedObject.rotation,
-                        flipX: placedObject.flipX,
-                        flipY: placedObject.flipY,
-                        pixels: placedObject.pixels?.slice(0, 3), // Show first 3 pixels
-                        hasPixels: !!(placedObject.pixels && placedObject.pixels.length > 0)
-                    });
 
                     // Add placed object to tracking
                     setPlacedObjects(currentObjects => {
-                        const newObjects = [...currentObjects, placedObject];
-                        console.log('🎯 PLACEMENT - Updated placed objects:', {
-                            previousCount: currentObjects.length,
-                            newCount: newObjects.length,
-                            newObject: placedObject.id
-                        });
-                        return newObjects;
+                        return [...currentObjects, placedObject];
                     });
 
                     // Add guidance lines to the guidance line system
@@ -1699,15 +1406,8 @@ const GameOfLife = React.forwardRef(({
 
                         // Make sure guidance lines are visible when new ones are created
                         if (onSetGuidanceLinesVisible && !guidanceLinesVisible) {
-                            console.log('🎯 Making guidance lines visible after placing pattern with guidance lines');
                             onSetGuidanceLinesVisible(true);
                         }
-                    } else {
-                        console.log('🎯 No guidance lines to add:', {
-                            hasFunction: !!onAddGuidanceLineObject,
-                            guidanceLineCount: placedObject.guidanceLines.length,
-                            patternName: selectedPattern.name
-                        });
                     }
 
                     // Apply placed object pixels to grid
@@ -1812,25 +1512,13 @@ const GameOfLife = React.forwardRef(({
         });
 
         if (pasting && selectedPattern) {
-            console.log('🎯 Setting hover cell for pasting:', {
-                gridX, gridY,
-                patternName: selectedPattern.name,
-                hasGuidanceLines: !!(selectedPattern.guidanceLines || selectedPattern.guidanceLine),
-                guidanceLinesVisible
-            });
             setHoverCell({x: gridX, y: gridY});
         } else {
-            if (hoverCell) {
-                console.log('🎯 Clearing hover cell:', {
-                    reason: !pasting ? 'not pasting' : 'no selectedPattern'
-                });
-            }
             setHoverCell(null);
         }
     }, [gridSize, pasting, selectedPattern, cellSize, hoverCell, guidanceLinesVisible]), 16); // ~60fps throttling
 
     const handleCanvasMouseLeave = useCallback(() => {
-        console.log('🎯 Mouse left canvas - clearing hover cell');
         setHoverCell(null);
         setMouseCoords(null);
     }, []);
@@ -1861,7 +1549,6 @@ const GameOfLife = React.forwardRef(({
     }, [running]);
 
     const handleReset = useCallback(() => {
-        console.log('🔄 RESET BUTTON PRESSED - handleReset called');
 
         // Stop the game if running
         if (onRunningChangeRef.current) {
@@ -1870,7 +1557,6 @@ const GameOfLife = React.forwardRef(({
 
         // Restore placed objects to initial state
         setPlacedObjects(initialPlacedObjects);
-        console.log('🔄 Restoring', initialPlacedObjects.length, 'initial placed objects');
 
         // Restore to prePlayBoardState (the state at generation 0 with user's additions)
         const baseGrid = prePlayBoardState ?
@@ -1880,7 +1566,6 @@ const GameOfLife = React.forwardRef(({
         // Apply initial placed objects on top of the pre-play state
         const restoredGrid = PlacedObjectService.applyPlacedObjectsToGrid(baseGrid, initialPlacedObjects);
         setGrid(restoredGrid);
-        console.log('🔄 Grid restored to prePlayBoardState (generation 0 with user additions)');
 
         setPreviousGrid(null);
         setGeneration(0);
@@ -1964,24 +1649,17 @@ const GameOfLife = React.forwardRef(({
     }, [prePlayBoardState, setupBoardState, initialPlacedObjects, gridSize, challenge, brushes, onRunningChangeRef, onResetGuidanceLineObjects, onAddGuidanceLineObject, running, brushesLoaded, generateTestScenarioPreviewPatterns]);
 
     const handleClear = useCallback(() => {
-        console.log('🟠 handleClear function ENTERED - TOP OF FUNCTION');
-        console.log('🔄 CLEAR BUTTON PRESSED - handleClear called');
 
         try {
-            console.log('🟠 About to stop game if running');
             // Stop the game if running
             if (onRunningChangeRef.current) {
                 onRunningChangeRef.current(false);
             }
-            console.log('🟠 Game stopped');
 
-            console.log('🟠 About to clear placed objects');
             // Clear all user placed objects
             setPlacedObjects([]);
             setInitialPlacedObjects([]); // Clear initial placed objects since we're clearing everything
-            console.log('🔄 User placed objects cleared');
 
-            console.log('🟠 About to restore setup board state');
             // Restore to setupBoardState (original challenge setup from JSON)
             const baseGrid = setupBoardState ?
                 setupBoardState.map(arr => [...arr]) :
@@ -1990,14 +1668,11 @@ const GameOfLife = React.forwardRef(({
             setGrid(baseGrid);
             // Update prePlayBoardState to match the setup (ready for user to add things)
             setPrePlayBoardState(baseGrid.map(arr => [...arr]));
-            console.log('🔄 Grid cleared, restored to setupBoardState (original challenge setup)');
 
-            console.log('🟠 About to reset game state');
             setPreviousGrid(null);
             setGeneration(0);
             setLevelCompleted(false);
             setLevelFailed(false);
-            console.log('🟠 Game state reset complete');
         } catch (error) {
             console.error('🟠 Error in handleClear:', error);
         }
@@ -2113,7 +1788,7 @@ const GameOfLife = React.forwardRef(({
             return [];
         }
 
-        const handleData = placedObjects.map(obj => {
+        return placedObjects.map(obj => {
             // Get the top-left corner of the placed object
             const minX = Math.min(...obj.pixels.map(p => p.x));
             const minY = Math.min(...obj.pixels.map(p => p.y));
@@ -2129,8 +1804,6 @@ const GameOfLife = React.forwardRef(({
                 rotation: obj.rotation || 0
             };
         });
-
-        return handleData;
     }, [running, placedObjects]);
 
 

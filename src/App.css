@@ -510,7 +510,16 @@ input[type="range"]::-moz-range-thumb {
 
 .detector-display {
   display: flex;
-  gap: 15px;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.detector-row {
+  display: flex;
+  gap: 8px;
   align-items: center;
   justify-content: center;
 }
@@ -527,5 +536,20 @@ input[type="range"]::-moz-range-thumb {
   letter-spacing: 2px;
   min-width: 25px;
   text-align: center;
+}
+
+/* Smaller font and tighter spacing for two-row layout */
+.detector-panel.two-rows .detector-display {
+  gap: 4px;
+}
+
+.detector-panel.two-rows .detector-digit {
+  font-size: 1.5rem;
+  min-width: 20px;
+  letter-spacing: 1px;
+}
+
+.detector-panel.two-rows .detector-row {
+  gap: 8px;
 }
 
